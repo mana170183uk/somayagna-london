@@ -1,0 +1,21 @@
+import Link from 'next/link';
+import { OmGlyph } from '@/components/ui/Ornaments';
+
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen bg-ivory-50">
+      <header className="border-b border-gold-200 bg-ivory-50 sticky top-0 z-10">
+        <div className="container-tight flex items-center justify-between py-3">
+          <Link href="/admin" className="flex items-center gap-2 text-maroon-800">
+            <OmGlyph className="w-5 h-5 text-maroon-700" />
+            <span className="h-display text-lg">SomaYagna · Admin</span>
+          </Link>
+          <form action="/api/admin/logout" method="post">
+            <button className="btn-ghost text-sm">Sign out</button>
+          </form>
+        </div>
+      </header>
+      <main className="container-tight py-8">{children}</main>
+    </div>
+  );
+}

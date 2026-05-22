@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg: #FFFCF6;
+  --color-fg: #2C0A0A;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-fg);
+  font-feature-settings: "ss01", "cv11";
+}
+
+/* Cinematic vertical rhythm */
+.section { @apply py-20 md:py-28; }
+.container-tight { @apply max-w-6xl mx-auto px-5 md:px-8; }
+
+/* Display headings */
+.h-display { @apply font-display tracking-tight leading-[1.05]; }
+
+/* Pill/eyebrow */
+.eyebrow {
+  @apply inline-flex items-center gap-2 text-[11px] md:text-xs font-medium tracking-[0.32em] uppercase text-maroon-700;
+}
+.eyebrow::before, .eyebrow::after {
+  content: '';
+  width: 18px; height: 1px;
+  background: currentColor;
+  opacity: .5;
+}
+
+/* Gold divider line */
+.divider-om {
+  display: inline-flex; align-items: center; gap: 12px;
+  color: theme('colors.gold.500');
+}
+.divider-om::before, .divider-om::after {
+  content: ''; width: 56px; height: 1px;
+  background: linear-gradient(90deg, transparent, currentColor, transparent);
+}
+
+/* Subtle paper texture overlay (pure CSS, no image) */
+.paper-texture {
+  background-image:
+    radial-gradient(rgba(86,20,20,0.05) 1px, transparent 1px),
+    radial-gradient(rgba(185,135,36,0.04) 1px, transparent 1px);
+  background-size: 22px 22px, 38px 38px;
+  background-position: 0 0, 11px 11px;
+}
+
+/* Premium button styles */
+.btn-primary {
+  @apply inline-flex items-center justify-center gap-2 rounded-full
+         bg-gradient-to-b from-saffron-500 to-saffron-700 text-ivory-50
+         px-7 py-3.5 text-base font-medium shadow-soft-gold
+         hover:from-saffron-400 hover:to-saffron-600 transition
+         focus:outline-none focus:ring-4 focus:ring-saffron-300/60;
+}
+.btn-secondary {
+  @apply inline-flex items-center justify-center gap-2 rounded-full
+         border border-maroon-700/30 bg-ivory-50/60 text-maroon-800
+         px-7 py-3.5 text-base font-medium backdrop-blur
+         hover:bg-ivory-50 hover:border-maroon-700/60 transition
+         focus:outline-none focus:ring-4 focus:ring-maroon-300/40;
+}
+.btn-ghost {
+  @apply inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm
+         text-maroon-800 hover:bg-ivory-100 transition;
+}
+
+/* Cards */
+.card {
+  @apply bg-ivory-50 border border-gold-200/60 rounded-2xl shadow-altar/40;
+}
+
+/* Focus visible everywhere — accessibility */
+*:focus-visible { outline: 2px solid theme('colors.saffron.500'); outline-offset: 2px; }
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-flicker, .animate-slow-spin { animation: none !important; }
+  html { scroll-behavior: auto; }
+}

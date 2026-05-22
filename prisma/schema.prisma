@@ -1,0 +1,197 @@
+// SomaYagna London — Prisma schema (Neon PostgreSQL)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum YagnaType {
+  WELCOME           // 14 June — info only
+  PURSHOTAM         // 15 June
+  VISHNU_GOPAL      // 16–21 June
+}
+
+enum BookingType {
+  SINGLE_POSITION
+  FULL_KUND
+}
+
+enum BookingStatus {
+  PENDING_PAYMENT   // hold placed, payment in flight
+  CONFIRMED         // payment success
+  CANCELLED         // refunded / admin cancelled
+  EXPIRED           // hold expired before payment
+  FAILED            // payment failed
+}
+
+enum PaymentProvider {
+  STRIPE
+  PAYPAL
+  MOCK
+  ADMIN_MANUAL
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+enum Relation {
+  COUPLE
+  SIBLING
+  INDIVIDUAL
+}
+
+model EventDay {
+  id          String     @id @default(cuid())
+  date        DateTime   @unique          // midnight UTC of the event day
+  yagnaType   YagnaType
+  title       String                       // e.g. "Purshotam Yagna"
+  description String?    @db.Text
+  isActive    Boolean    @default(true)    // 14 June -> false (no booking)
+  sessions    Session[]
+  createdAt   DateTime   @default(now())
+
+  @@index([date])
+}
+
+model Session {
+  id          String     @id @default(cuid())
+  eventDayId  String
+  eventDay    EventDay   @relation(fields: [eventDayId], references: [id], onDelete: Cascade)
+  startTime   String     // "10:15", "14:15", "16:15"  (24h, Europe/London)
+  label       String     // "Morning", "Afternoon I", "Afternoon II"
+  kunds       Kund[]
+  bookings    Booking[]
+  holds       BookingHold[]
+  createdAt   DateTime   @default(now())
+
+  @@unique([eventDayId, startTime])
+  @@index([eventDayId])
+}
+
+model Kund {
+  id         String          @id @default(cuid())
+  sessionId  String
+  session    Session         @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  number     Int             // 1..11
+  positions  KundPosition[]
+
+  @@unique([sessionId, number])
+  @@index([sessionId])
+}
+
+// One row per (kund × position). Inventory truth lives here.
+model KundPosition {
+  id         String     @id @default(cuid())
+  kundId     String
+  kund       Kund       @relation(fields: [kundId], references: [id], onDelete: Cascade)
+  label      String     // "A" | "B" | "C"
+
+  bookingId  String?    @unique          // confirmed owner (NULL if free)
+  booking    Booking?   @relation("ConfirmedPositions", fields: [bookingId], references: [id], onDelete: SetNull)
+
+  holdId     String?    @unique          // active hold (NULL if free)
+  hold       BookingHold? @relation("HeldPositions", fields: [holdId], references: [id], onDelete: SetNull)
+
+  @@unique([kundId, label])
+  @@index([kundId])
+}
+
+// A short-lived (10 min) reservation while the user completes payment.
+model BookingHold {
+  id           String         @id @default(cuid())
+  sessionId    String
+  session      Session        @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  bookingType  BookingType
+  kundNumber   Int                                   // 1..11
+  positions    String[]                              // ["A"] or ["A","B","C"]
+  amountPence  Int                                   // £201 -> 20100, £501 -> 50100
+  currency     String         @default("GBP")
+  email        String
+  primaryName  String
+  expiresAt    DateTime
+  createdAt    DateTime       @default(now())
+
+  heldPositions KundPosition[] @relation("HeldPositions")
+  booking       Booking?
+
+  @@index([sessionId])
+  @@index([expiresAt])
+}
+
+model Booking {
+  id              String         @id @default(cuid())
+  reference       String         @unique             // human-friendly "SY-2026-000123"
+  sessionId       String
+  session         Session        @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  holdId          String?        @unique
+  hold            BookingHold?   @relation(fields: [holdId], references: [id], onDelete: SetNull)
+  bookingType     BookingType
+  kundNumber      Int
+  positions       String[]                            // ["A"] or ["A","B","C"]
+  amountPence     Int
+  currency        String         @default("GBP")
+  status          BookingStatus  @default(PENDING_PAYMENT)
+
+  primaryName     String
+  relation        Relation
+  email           String
+  phone           String
+  secondParticipantName String?
+
+  confirmedAt     DateTime?
+  cancelledAt     DateTime?
+  cancelReason    String?
+
+  payment         Payment?
+  confirmedPositions KundPosition[] @relation("ConfirmedPositions")
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([sessionId])
+  @@index([email])
+  @@index([status])
+}
+
+model Payment {
+  id              String           @id @default(cuid())
+  bookingId       String           @unique
+  booking         Booking          @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  provider        PaymentProvider
+  providerRef     String?                              // Stripe session id or PayPal order id
+  amountPence     Int
+  currency        String           @default("GBP")
+  status          PaymentStatus    @default(PENDING)
+  rawWebhook      Json?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([providerRef])
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String                                  // scrypt; see lib/auth.ts
+  name         String?
+  createdAt    DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actor     String                                     // admin email or "system"
+  action    String                                     // "CANCEL_BOOKING", "EDIT_BOOKING", ...
+  target    String?                                    // booking id, session id, etc.
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
