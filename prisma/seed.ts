@@ -4,12 +4,13 @@
  *   15 Jun → PURSHOTAM (3 sessions × 11 kunds × 3 positions)
  *   16–21 Jun → VISHNU_GOPAL (same shape)
  *
- * Also seeds a single admin user from ADMIN_EMAIL / ADMIN_PASSWORD env vars.
+ * Admin user is NOT seeded here — that's handled by GET /api/admin/bootstrap
+ * after the first deploy, so the admin email PII never crosses regions during
+ * the iad1 build.
  *
  * Idempotent: re-running won't duplicate.
  */
 import { PrismaClient, YagnaType } from '@prisma/client';
-import { hashPassword } from '../src/lib/passwords';
 
 const prisma = new PrismaClient();
 
@@ -97,26 +98,9 @@ async function seedDays() {
   }
 }
 
-async function seedAdmin() {
-  const email = process.env.ADMIN_EMAIL;
-  const password = process.env.ADMIN_PASSWORD;
-  if (!email || !password) {
-    console.warn('⚠ ADMIN_EMAIL / ADMIN_PASSWORD not set — skipping admin user creation.');
-    return;
-  }
-  const passwordHash = hashPassword(password);
-  await prisma.adminUser.upsert({
-    where: { email },
-    update: { passwordHash },
-    create: { email, passwordHash, name: 'Organizer' }
-  });
-  console.log(`✓ Admin user ready: ${email}`);
-}
-
 async function main() {
   console.log(`\nSeeding SomaYagna London ${EVENT_YEAR}…\n`);
   await seedDays();
-  await seedAdmin();
   const totalPositions = await prisma.kundPosition.count();
   const expected = 7 /* active days */ * 3 /* sessions */ * 11 /* kunds */ * 3 /* positions */;
   console.log(`\nTotal positions: ${totalPositions} (expected ${expected})\n`);
