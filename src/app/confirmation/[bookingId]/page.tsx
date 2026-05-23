@@ -6,9 +6,10 @@ import { Mandala, Diya, OmGlyph } from '@/components/ui/Ornaments';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Confirmation({ params }: { params: { bookingId: string } }) {
+export default async function Confirmation({ params }: { params: Promise<{ bookingId: string }> }) {
+  const { bookingId } = await params;
   const booking = await prisma.booking.findUnique({
-    where: { id: params.bookingId },
+    where: { id: bookingId },
     include: { session: { include: { eventDay: true } }, payment: true }
   });
   if (!booking) notFound();

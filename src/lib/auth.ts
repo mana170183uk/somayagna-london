@@ -26,8 +26,8 @@ export function verifySession(token: string | undefined): { email: string } | nu
   return { email };
 }
 
-export function getAdminFromCookies(): { email: string } | null {
-  const token = cookies().get('sy_admin')?.value;
+export async function getAdminFromCookies(): Promise<{ email: string } | null> {
+  const token = (await cookies()).get('sy_admin')?.value;
   return verifySession(token);
 }
 

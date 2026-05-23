@@ -4,20 +4,22 @@ import { prisma } from '@/lib/prisma';
 import { adminEditBookingSchema } from '@/lib/zodSchemas';
 import { cancelBooking } from '@/lib/inventory';
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const admin = getAdminFromCookies();
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const admin = await getAdminFromCookies();
   if (!admin) return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 });
+  const { id } = await params;
   const parsed = adminEditBookingSchema.safeParse(await req.json());
   if (!parsed.success) return NextResponse.json({ error: 'INVALID' }, { status: 400 });
-  await prisma.booking.update({ where: { id: params.id }, data: parsed.data });
-  await prisma.auditLog.create({ data: { actor: admin.email, action: 'EDIT_BOOKING', target: params.id, meta: parsed.data } });
+  await prisma.booking.update({ where: { id }, data: parsed.data });
+  await prisma.auditLog.create({ data: { actor: admin.email, action: 'EDIT_BOOKING', target: id, meta: parsed.data } });
   return NextResponse.json({ ok: true });
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  const admin = getAdminFromCookies();
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const admin = await getAdminFromCookies();
   if (!admin) return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 });
+  const { id } = await params;
   const { reason } = (await req.json().catch(() => ({}))) as { reason?: string };
-  await cancelBooking(params.id, reason ?? 'Admin cancellation', admin.email);
+  await cancelBooking(id, reason ?? 'Admin cancellation', admin.email);
   return NextResponse.json({ ok: true });
 }

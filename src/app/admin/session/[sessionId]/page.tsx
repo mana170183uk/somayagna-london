@@ -7,12 +7,13 @@ import AdminSessionPanel from '@/components/admin/AdminSessionPanel';
 
 export const dynamic = 'force-dynamic';
 
-export default async function SessionDetail({ params }: { params: { sessionId: string } }) {
-  const admin = getAdminFromCookies();
+export default async function SessionDetail({ params }: { params: Promise<{ sessionId: string }> }) {
+  const admin = await getAdminFromCookies();
   if (!admin) redirect('/admin/login');
 
+  const { sessionId } = await params;
   const session = await prisma.session.findUnique({
-    where: { id: params.sessionId },
+    where: { id: sessionId },
     include: {
       eventDay: true,
       kunds: {

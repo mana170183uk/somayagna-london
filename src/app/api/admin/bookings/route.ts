@@ -4,7 +4,7 @@ import { adminCreateBookingSchema } from '@/lib/zodSchemas';
 import { adminCreateConfirmedBooking, InventoryError } from '@/lib/inventory';
 
 export async function POST(req: NextRequest) {
-  const admin = getAdminFromCookies();
+  const admin = await getAdminFromCookies();
   if (!admin) return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 });
 
   const parsed = adminCreateBookingSchema.safeParse(await req.json());

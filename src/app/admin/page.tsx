@@ -7,7 +7,7 @@ import { formatDateLong, formatGBP, formatTime, SESSION_CAPACITY } from '@/lib/c
 export const dynamic = 'force-dynamic';
 
 export default async function AdminHome() {
-  const admin = getAdminFromCookies();
+  const admin = await getAdminFromCookies();
   if (!admin) redirect('/admin/login');
 
   const days = await prisma.eventDay.findMany({

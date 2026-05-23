@@ -3,7 +3,7 @@ import { getAdminFromCookies } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 export async function GET() {
-  const admin = getAdminFromCookies();
+  const admin = await getAdminFromCookies();
   if (!admin) return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 });
 
   const bookings = await prisma.booking.findMany({
