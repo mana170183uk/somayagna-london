@@ -34,16 +34,19 @@ export async function sendConfirmationEmail(i: ConfirmEmailInput): Promise<void>
     return;
   }
 
-  await fetch('https://api.resend.com/emails', {
+  const from = process.env.EMAIL_FROM ?? `${EVENT.name} <no-reply@${(process.env.NEXT_PUBLIC_SITE_URL ?? 'somayagnalondon.org').replace(/^https?:\/\//, '')}>`;
+  const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      from: process.env.EMAIL_FROM ?? `${EVENT.name} <no-reply@${(process.env.NEXT_PUBLIC_SITE_URL ?? 'somayagnalondon.org').replace(/^https?:\/\//, '')}>`,
-      to: [i.to],
-      subject,
-      html
-    })
+    body: JSON.stringify({ from, to: [i.to], subject, html })
   });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    console.error(`[email] Resend failed ${res.status} for booking ${i.reference} -> ${i.to}; from="${from}"; body=${body}`);
+    return;
+  }
+  const json = await res.json().catch(() => null) as { id?: string } | null;
+  console.log(`[email] sent confirmation for ${i.reference} to ${i.to} (resend id=${json?.id ?? 'unknown'})`);
 }
 
 function renderHtml(i: ConfirmEmailInput) {
