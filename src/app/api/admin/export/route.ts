@@ -11,12 +11,15 @@ export async function GET() {
     include: { session: { include: { eventDay: true } }, payment: true }
   });
 
-  const header = ['Reference','Status','Date','Time','Yagna','Kund','Positions','BookingType','Amount (GBP)','PaymentStatus','PaymentProvider','PrimaryName','Relation','Email','Phone','SecondParticipant','CreatedAt'];
+  const header = ['Reference','Status','Date','Time','Yagna','Kund','Positions','BookingType','Seva (GBP)','Donation (GBP)','Total (GBP)','PaymentStatus','PaymentProvider','PrimaryName','Relation','Email','Phone','SecondParticipant','CreatedAt'];
   const rows = bookings.map((b) => [
     b.reference, b.status,
     b.session.eventDay.date.toISOString().slice(0,10), b.session.startTime,
     b.session.eventDay.title, b.kundNumber, b.positions.join('|'),
-    b.bookingType, (b.amountPence/100).toFixed(2),
+    b.bookingType,
+    (b.amountPence/100).toFixed(2),
+    (b.donationPence/100).toFixed(2),
+    ((b.amountPence + b.donationPence)/100).toFixed(2),
     b.payment?.status ?? '', b.payment?.provider ?? '',
     b.primaryName, b.relation, b.email, b.phone, b.secondParticipantName ?? '',
     b.createdAt.toISOString()

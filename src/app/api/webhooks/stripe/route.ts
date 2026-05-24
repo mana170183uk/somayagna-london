@@ -32,6 +32,9 @@ export async function POST(req: NextRequest) {
     });
     const reg = (regLog?.meta as any)?.registration ?? {};
 
+    // Donation: prefer fresh value from Stripe session metadata, fall back to stashed registration
+    const donationPence = Number(s.metadata?.donationPence ?? reg.donationPence ?? 0) || 0;
+
     try {
       const booking = await confirmBookingFromHold({
         holdId,
@@ -40,6 +43,7 @@ export async function POST(req: NextRequest) {
         email: reg.email ?? hold.email,
         phone: reg.phone ?? s.customer_details?.phone ?? '',
         secondParticipantName: reg.secondParticipantName ?? null,
+        donationPence,
         payment: { provider: 'STRIPE', providerRef: s.id, status: 'SUCCEEDED', raw: s }
       });
       const full = await prisma.booking.findUnique({ where: { id: booking.id }, include: { session: { include: { eventDay: true } } } });
@@ -47,7 +51,8 @@ export async function POST(req: NextRequest) {
         to: full.email, primaryName: full.primaryName, reference: full.reference,
         date: full.session.eventDay.date, startTime: full.session.startTime,
         yagnaType: full.session.eventDay.title, kundNumber: full.kundNumber,
-        positions: full.positions, bookingType: full.bookingType, amountPence: full.amountPence
+        positions: full.positions, bookingType: full.bookingType, amountPence: full.amountPence,
+        donationPence: full.donationPence
       });
     } catch (e) { console.error('Stripe confirm failed', e); }
   }

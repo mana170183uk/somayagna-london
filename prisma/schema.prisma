@@ -138,6 +138,7 @@ model Booking {
   kundNumber      Int
   positions       String[]                            // ["A"] or ["A","B","C"]
   amountPence     Int
+  donationPence   Int            @default(0)             // optional charity donation alongside booking
   currency        String         @default("GBP")
   status          BookingStatus  @default(PENDING_PAYMENT)
 

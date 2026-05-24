@@ -238,7 +238,7 @@ function PurshotamSection() {
               </li>
             ))}
           </ul>
-          <Link href="/book?day=2" className="btn-primary mt-8">Reserve a seat on 15 June</Link>
+          <Link href="/book?day=1" className="btn-primary mt-8">Reserve a seat on 15 June</Link>
         </div>
       </div>
     </section>

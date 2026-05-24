@@ -20,6 +20,7 @@ export const registrationSchema = z.object({
   email: z.string().email(),
   phone: z.string().min(5).max(40),
   secondParticipantName: z.string().max(120).optional().nullable(),
+  donationPence: z.number().int().min(0).max(10_000_00).optional(),
   provider: z.enum(['stripe', 'paypal', 'mock'])
 });
 export type RegistrationInput = z.infer<typeof registrationSchema>;

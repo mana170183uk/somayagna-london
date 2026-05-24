@@ -12,6 +12,7 @@ export function getStripe(): Stripe {
 interface CreateCheckoutArgs {
   holdId: string;
   amountPence: number;
+  donationPence?: number;
   email: string;
   description: string;
   successUrl: string;
@@ -20,19 +21,30 @@ interface CreateCheckoutArgs {
 
 export async function createStripeCheckoutSession(a: CreateCheckoutArgs) {
   const stripe = getStripe();
-  return stripe.checkout.sessions.create({
-    mode: 'payment',
-    customer_email: a.email,
-    line_items: [{
+  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [{
+    quantity: 1,
+    price_data: {
+      currency: 'gbp',
+      unit_amount: a.amountPence,
+      product_data: { name: a.description }
+    }
+  }];
+  if (a.donationPence && a.donationPence > 0) {
+    lineItems.push({
       quantity: 1,
       price_data: {
         currency: 'gbp',
-        unit_amount: a.amountPence,
-        product_data: { name: a.description }
+        unit_amount: a.donationPence,
+        product_data: { name: 'Donation to Unity in Divinity (UK registered charity)' }
       }
-    }],
-    metadata: { holdId: a.holdId },
-    payment_intent_data: { metadata: { holdId: a.holdId } },
+    });
+  }
+  return stripe.checkout.sessions.create({
+    mode: 'payment',
+    customer_email: a.email,
+    line_items: lineItems,
+    metadata: { holdId: a.holdId, donationPence: String(a.donationPence ?? 0) },
+    payment_intent_data: { metadata: { holdId: a.holdId, donationPence: String(a.donationPence ?? 0) } },
     success_url: a.successUrl,
     cancel_url: a.cancelUrl,
     expires_at: Math.floor(Date.now() / 1000) + 30 * 60

@@ -24,6 +24,7 @@ export async function POST(req: NextRequest) {
   const { orderId, approveUrl } = await createPaypalOrder({
     holdId: hold.id,
     amountPence: hold.amountPence,
+    donationPence: parsed.data.donationPence,
     description: desc,
     returnUrl: `${site}/confirmation/pending?holdId=${hold.id}&provider=paypal`,
     cancelUrl: `${site}/book?cancelled=1`

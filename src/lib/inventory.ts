@@ -195,6 +195,7 @@ interface ConfirmFromHoldArgs {
   email: string;
   phone: string;
   secondParticipantName?: string | null;
+  donationPence?: number;
   payment: { provider: PaymentProvider; providerRef?: string; status: PaymentStatus; raw?: unknown };
 }
 
@@ -210,6 +211,7 @@ export async function confirmBookingFromHold(args: ConfirmFromHoldArgs) {
     const existing = await tx.booking.findUnique({ where: { holdId: hold.id } });
     if (existing) return existing; // idempotent — webhook may fire twice
 
+    const donationPence = Math.max(0, args.donationPence ?? 0);
     const booking = await tx.booking.create({
       data: {
         reference: bookingReference(process.env.EVENT_YEAR ?? '2026'),
@@ -219,6 +221,7 @@ export async function confirmBookingFromHold(args: ConfirmFromHoldArgs) {
         kundNumber: hold.kundNumber,
         positions: hold.positions,
         amountPence: hold.amountPence,
+        donationPence,
         status: 'CONFIRMED' as BookingStatus,
         primaryName: args.primaryName,
         relation: args.relation,
@@ -230,7 +233,7 @@ export async function confirmBookingFromHold(args: ConfirmFromHoldArgs) {
           create: {
             provider: args.payment.provider,
             providerRef: args.payment.providerRef,
-            amountPence: hold.amountPence,
+            amountPence: hold.amountPence + donationPence,
             status: args.payment.status,
             rawWebhook: (args.payment.raw as Prisma.InputJsonValue) ?? undefined
           }

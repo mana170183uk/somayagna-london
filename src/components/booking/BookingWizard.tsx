@@ -67,6 +67,8 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
     primaryName: '', relation: 'INDIVIDUAL' as 'COUPLE'|'SIBLING'|'INDIVIDUAL',
     email: '', phone: '', secondParticipantName: ''
   });
+  const [donationEnabled, setDonationEnabled] = useState(false);
+  const [donationPence, setDonationPence] = useState(5100); // default suggestion: £51
   const [provider, setProvider] = useState<Provider>(() => (enabledProviders[0] as Provider) ?? 'mock');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -103,7 +105,9 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
   const selectedDay = activeDays.find((d) => d.id === dayId) ?? null;
   const selectedSession = selectedDay?.sessions.find((s) => s.id === sessionId) ?? null;
 
-  const totalPence = bookingType === 'FULL_KUND' ? PRICE_FULL : PRICE_SINGLE * positions.length;
+  const basePence = bookingType === 'FULL_KUND' ? PRICE_FULL : PRICE_SINGLE * positions.length;
+  const activeDonationPence = donationEnabled ? donationPence : 0;
+  const totalPence = basePence + activeDonationPence;
 
   const canProceedFromType = bookingType === 'SINGLE_POSITION' || bookingType === 'FULL_KUND';
   const canProceedFromKund =
@@ -143,7 +147,7 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
     if (!holdId) return;
     setSubmitting(true); setError(null);
     try {
-      const body = { ...registration, holdId, provider };
+      const body = { ...registration, holdId, provider, donationPence: activeDonationPence };
       const endpoint = provider === 'stripe' ? '/api/checkout/stripe'
                      : provider === 'paypal' ? '/api/checkout/paypal'
                      : '/api/mock-pay';
@@ -234,6 +238,12 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
         {step === 5 && (
           <StepCard title="Your details" subtitle="We will send your confirmation here.">
             <RegistrationForm value={registration} onChange={setRegistration} />
+            <DonationSection
+              enabled={donationEnabled}
+              pence={donationPence}
+              onToggle={setDonationEnabled}
+              onChange={setDonationPence}
+            />
             <div className="flex justify-between mt-6">
               <BackButton onClick={() => setStep(4)} />
               <button
@@ -270,6 +280,8 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
           bookingType={bookingType}
           kundNumber={kundNumber}
           positions={positions}
+          basePence={basePence}
+          donationPence={activeDonationPence}
           totalPence={totalPence}
         />
       </aside>
@@ -476,6 +488,76 @@ function RegistrationForm({ value, onChange }: { value: any; onChange: (v: any) 
   );
 }
 
+function DonationSection({
+  enabled, pence, onToggle, onChange
+}: {
+  enabled: boolean; pence: number;
+  onToggle: (v: boolean) => void;
+  onChange: (p: number) => void;
+}) {
+  const presets = [1100, 2100, 5100, 10100, 50100]; // £11, £21, £51, £101, £501
+
+  return (
+    <div className="mt-6 rounded-2xl border border-saffron-300/60 bg-gradient-to-br from-saffron-50 via-ivory-50 to-ivory-100 p-5">
+      <label className="flex items-start gap-3 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={enabled}
+          onChange={(e) => onToggle(e.target.checked)}
+          className="mt-1 w-5 h-5 accent-saffron-600 cursor-pointer"
+        />
+        <div className="flex-1">
+          <div className="h-display text-lg text-maroon-800">Add a charity donation</div>
+          <div className="text-xs text-maroon-900/70 mt-0.5 leading-relaxed">
+            100% of donations go to <strong>Unity in Divinity (UK Registered Charity)</strong>, the
+            organising body of this programme. Your donation is collected together with your seva
+            payment and will appear as a separate line on your receipt.
+          </div>
+        </div>
+      </label>
+
+      {enabled && (
+        <div className="mt-4">
+          <div className="text-[10px] uppercase tracking-widest text-maroon-700 mb-2">Choose an amount</div>
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+            {presets.map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => onChange(p)}
+                className={classNames(
+                  'rounded-lg border py-2 text-sm font-medium transition',
+                  pence === p
+                    ? 'bg-saffron-500 text-ivory-50 border-saffron-700 shadow-soft-gold'
+                    : 'bg-ivory-50 border-gold-300/60 text-maroon-800 hover:border-saffron-400'
+                )}
+              >
+                £{(p / 100).toFixed(0)}
+              </button>
+            ))}
+          </div>
+          <div className="mt-3 flex items-center gap-2">
+            <label className="text-sm text-maroon-800 whitespace-nowrap">Or custom (£):</label>
+            <input
+              type="number"
+              min={1}
+              max={10000}
+              step={1}
+              value={pence > 0 ? Math.round(pence / 100) : ''}
+              onChange={(e) => {
+                const v = parseInt(e.target.value || '0', 10);
+                onChange(Math.max(0, v) * 100);
+              }}
+              className="flex-1 rounded-lg bg-white border border-gold-300/40 px-3 py-2 text-maroon-900 focus:outline-none focus:border-saffron-500 focus:ring-2 focus:ring-saffron-200/60"
+              placeholder="Custom amount"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Field({ label, required, full, children }: { label: string; required?: boolean; full?: boolean; children: React.ReactNode }) {
   return (
     <label className={classNames('block text-sm text-maroon-900', full && 'sm:col-span-2')}>
@@ -534,9 +616,10 @@ function HoldCountdown({ expires, onExpire }: { expires: number | null; onExpire
   );
 }
 
-function SummaryCard({ day, session, bookingType, kundNumber, positions, totalPence }: {
+function SummaryCard({ day, session, bookingType, kundNumber, positions, basePence, donationPence, totalPence }: {
   day: DayLite | null; session: SessionLite | null; bookingType: BookingType;
-  kundNumber: number | null; positions: ('A'|'B'|'C')[]; totalPence: number;
+  kundNumber: number | null; positions: ('A'|'B'|'C')[];
+  basePence: number; donationPence: number; totalPence: number;
 }) {
   return (
     <div className="card p-6 sticky top-24">
@@ -550,7 +633,11 @@ function SummaryCard({ day, session, bookingType, kundNumber, positions, totalPe
         <Row k="Kund" v={kundNumber ? `Kund ${kundNumber}` : '—'} />
         <Row k="Positions" v={positions.length ? positions.join(', ') : '—'} />
       </dl>
-      <div className="mt-5 pt-5 border-t border-gold-200 flex items-center justify-between">
+      <div className="mt-5 pt-5 border-t border-gold-200 space-y-1.5 text-sm">
+        <Row k="Seva" v={gbp(basePence)} />
+        {donationPence > 0 && <Row k="Donation (charity)" v={gbp(donationPence)} />}
+      </div>
+      <div className="mt-3 pt-3 border-t border-gold-200 flex items-center justify-between">
         <span className="text-sm text-maroon-700/80">Total</span>
         <span className="h-display text-3xl text-saffron-700">{gbp(totalPence)}</span>
       </div>

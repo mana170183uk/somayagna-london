@@ -17,6 +17,7 @@ interface ConfirmEmailInput {
   positions: string[];
   bookingType: 'SINGLE_POSITION' | 'FULL_KUND';
   amountPence: number;
+  donationPence?: number;
 }
 
 export async function sendConfirmationEmail(i: ConfirmEmailInput): Promise<void> {
@@ -69,7 +70,9 @@ function renderHtml(i: ConfirmEmailInput) {
         <tr><td style="color:#7A380D;">Time</td><td>${formatTime(i.startTime)}</td></tr>
         <tr><td style="color:#7A380D;">Kund</td><td>Kund ${i.kundNumber}</td></tr>
         <tr><td style="color:#7A380D;">Position</td><td>${typeLabel}</td></tr>
-        <tr><td style="color:#7A380D;">Amount paid</td><td>${formatGBP(i.amountPence)}</td></tr>
+        <tr><td style="color:#7A380D;">Seva amount</td><td>${formatGBP(i.amountPence)}</td></tr>
+        ${i.donationPence && i.donationPence > 0 ? `<tr><td style="color:#7A380D;">Donation</td><td>${formatGBP(i.donationPence)} <span style="color:#7A5712;font-size:12px;">(to Unity in Divinity charity)</span></td></tr>
+        <tr><td style="color:#7A380D;font-weight:bold;">Total paid</td><td style="font-weight:bold;">${formatGBP(i.amountPence + i.donationPence)}</td></tr>` : ''}
         <tr><td style="color:#7A380D;">Venue</td><td>${escapeHtml(EVENT.venueName)}, ${escapeHtml(EVENT.venueAddress)}</td></tr>
       </table>
     </td></tr>

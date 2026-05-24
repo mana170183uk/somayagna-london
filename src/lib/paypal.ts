@@ -24,9 +24,13 @@ async function accessToken() {
   return json.access_token;
 }
 
-export async function createPaypalOrder(args: { holdId: string; amountPence: number; description: string; returnUrl: string; cancelUrl: string }) {
+export async function createPaypalOrder(args: { holdId: string; amountPence: number; donationPence?: number; description: string; returnUrl: string; cancelUrl: string }) {
   const token = await accessToken();
-  const value = (args.amountPence / 100).toFixed(2);
+  const totalPence = args.amountPence + (args.donationPence ?? 0);
+  const value = (totalPence / 100).toFixed(2);
+  const description = args.donationPence && args.donationPence > 0
+    ? `${args.description} + £${(args.donationPence / 100).toFixed(2)} donation`
+    : args.description;
   const res = await fetch(`${baseUrl()}/v2/checkout/orders`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -34,7 +38,7 @@ export async function createPaypalOrder(args: { holdId: string; amountPence: num
       intent: 'CAPTURE',
       purchase_units: [{
         custom_id: args.holdId,
-        description: args.description,
+        description,
         amount: { currency_code: 'GBP', value }
       }],
       application_context: {

@@ -18,6 +18,7 @@ export async function POST(req: NextRequest) {
       email: parsed.data.email,
       phone: parsed.data.phone,
       secondParticipantName: parsed.data.secondParticipantName ?? null,
+      donationPence: parsed.data.donationPence,
       payment: { provider: 'MOCK', status: 'SUCCEEDED', providerRef: `mock_${Date.now()}` }
     });
 
@@ -28,7 +29,8 @@ export async function POST(req: NextRequest) {
         to: full.email, primaryName: full.primaryName, reference: full.reference,
         date: full.session.eventDay.date, startTime: full.session.startTime,
         yagnaType: full.session.eventDay.title, kundNumber: full.kundNumber,
-        positions: full.positions, bookingType: full.bookingType, amountPence: full.amountPence
+        positions: full.positions, bookingType: full.bookingType, amountPence: full.amountPence,
+        donationPence: full.donationPence
       }).catch(console.error);
     }
 

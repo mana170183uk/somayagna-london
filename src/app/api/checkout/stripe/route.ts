@@ -33,6 +33,7 @@ export async function POST(req: NextRequest) {
   const session = await createStripeCheckoutSession({
     holdId: hold.id,
     amountPence: hold.amountPence,
+    donationPence: parsed.data.donationPence,
     email: parsed.data.email,
     description: desc,
     successUrl: `${site}/confirmation/pending?holdId=${hold.id}&provider=stripe&session_id={CHECKOUT_SESSION_ID}`,

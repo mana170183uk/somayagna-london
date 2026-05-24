@@ -45,7 +45,13 @@ export default async function Confirmation({ params }: { params: Promise<{ booki
             <Row k="Session" v={`${booking.session.label} · ${formatTime(booking.session.startTime)}`} />
             <Row k="Kund" v={`Kund ${booking.kundNumber}`} />
             <Row k="Position" v={typeLabel} />
-            <Row k="Amount paid" v={formatGBP(booking.amountPence)} />
+            <Row k="Seva amount" v={formatGBP(booking.amountPence)} />
+            {booking.donationPence > 0 && (
+              <Row k="Donation (charity)" v={formatGBP(booking.donationPence)} />
+            )}
+            {booking.donationPence > 0 && (
+              <Row k="Total paid" v={formatGBP(booking.amountPence + booking.donationPence)} />
+            )}
             <Row k="Venue" v={`${EVENT.venueName}, ${EVENT.venueAddress}`} />
 
             <hr className="border-gold-200 my-4" />

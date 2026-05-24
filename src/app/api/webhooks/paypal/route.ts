@@ -24,6 +24,8 @@ export async function POST(req: NextRequest) {
     });
     const reg = (log?.meta as any)?.registration ?? {};
 
+    const donationPence = Number(reg.donationPence ?? 0) || 0;
+
     try {
       const booking = await confirmBookingFromHold({
         holdId,
@@ -32,6 +34,7 @@ export async function POST(req: NextRequest) {
         email: reg.email ?? hold.email,
         phone: reg.phone ?? '',
         secondParticipantName: reg.secondParticipantName ?? null,
+        donationPence,
         payment: { provider: 'PAYPAL', providerRef: orderId, status: 'SUCCEEDED', raw: event }
       });
       const full = await prisma.booking.findUnique({ where: { id: booking.id }, include: { session: { include: { eventDay: true } } } });
@@ -39,7 +42,8 @@ export async function POST(req: NextRequest) {
         to: full.email, primaryName: full.primaryName, reference: full.reference,
         date: full.session.eventDay.date, startTime: full.session.startTime,
         yagnaType: full.session.eventDay.title, kundNumber: full.kundNumber,
-        positions: full.positions, bookingType: full.bookingType, amountPence: full.amountPence
+        positions: full.positions, bookingType: full.bookingType, amountPence: full.amountPence,
+        donationPence: full.donationPence
       });
     } catch (e) { console.error('PayPal confirm failed', e); }
   }
