@@ -144,9 +144,16 @@ model Booking {
 
   primaryName     String
   relation        Relation
-  email           String
+  email           String?                                  // now optional - WhatsApp is primary channel
   phone           String
+  whatsappNumber  String?                                  // primary booking-confirmation channel
   secondParticipantName String?
+
+  // Optional address fields for Gift Aid (UK HMRC requires for claim)
+  addressLine1    String?
+  town            String?
+  postcode        String?
+  giftAid         Boolean        @default(false)           // donor declared UK taxpayer for Gift Aid
 
   confirmedAt     DateTime?
   cancelledAt     DateTime?

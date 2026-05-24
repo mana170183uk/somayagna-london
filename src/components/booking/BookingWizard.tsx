@@ -65,7 +65,9 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
   const [holdExpires, setHoldExpires] = useState<number | null>(null);
   const [registration, setRegistration] = useState({
     primaryName: '', relation: 'INDIVIDUAL' as 'COUPLE'|'SIBLING'|'INDIVIDUAL',
-    email: '', phone: '', secondParticipantName: ''
+    email: '', phone: '', whatsappNumber: '',
+    secondParticipantName: '',
+    addressLine1: '', town: '', postcode: '', giftAid: false
   });
   const [donationEnabled, setDonationEnabled] = useState(false);
   const [donationPence, setDonationPence] = useState(5100); // default suggestion: £51
@@ -123,7 +125,7 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
       body: JSON.stringify({
         sessionId, bookingType, kundNumber,
         positions: bookingType === 'FULL_KUND' ? ['A','B','C'] : positions,
-        email: registration.email || 'pending@example.com',
+        email: registration.email || 'pending@somayagnalondon.invalid',
         primaryName: registration.primaryName || 'Pending'
       })
     });
@@ -243,12 +245,19 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
               pence={donationPence}
               onToggle={setDonationEnabled}
               onChange={setDonationPence}
+              registration={registration}
+              setRegistration={setRegistration}
             />
             <div className="flex justify-between mt-6">
               <BackButton onClick={() => setStep(4)} />
               <button
                 className="btn-primary"
-                disabled={!registration.primaryName || !registration.email || !registration.phone}
+                disabled={
+                  !registration.primaryName ||
+                  !registration.phone ||
+                  !registration.whatsappNumber ||
+                  (registration.giftAid && (!registration.addressLine1 || !registration.town || !registration.postcode))
+                }
                 onClick={async () => { const ok = await createHold(); if (ok) setStep(6); }}
               >
                 Continue to payment
@@ -467,11 +476,23 @@ function RegistrationForm({ value, onChange }: { value: any; onChange: (v: any) 
           <option value="SIBLING">Sibling</option>
         </select>
       </Field>
-      <Field label="Email address" required>
-        <input type="email" className="input" value={value.email} required onChange={(e) => onChange({ ...value, email: e.target.value })} />
+      <Field label="WhatsApp number" required>
+        <input
+          type="tel" className="input" value={value.whatsappNumber} required
+          placeholder="+44 7…"
+          onChange={(e) => onChange({ ...value, whatsappNumber: e.target.value })}
+        />
+        <p className="text-[11px] text-maroon-700 mt-1">Booking confirmation will be sent here.</p>
       </Field>
       <Field label="Phone number" required>
         <input type="tel" className="input" value={value.phone} required onChange={(e) => onChange({ ...value, phone: e.target.value })} />
+      </Field>
+      <Field label="Email address (optional)" full>
+        <input
+          type="email" className="input" value={value.email}
+          placeholder="For receipt — leave blank to skip"
+          onChange={(e) => onChange({ ...value, email: e.target.value })}
+        />
       </Field>
       <Field label="Name of second participant (optional)" full>
         <input className="input" value={value.secondParticipantName} onChange={(e) => onChange({ ...value, secondParticipantName: e.target.value })} />
@@ -489,11 +510,13 @@ function RegistrationForm({ value, onChange }: { value: any; onChange: (v: any) 
 }
 
 function DonationSection({
-  enabled, pence, onToggle, onChange
+  enabled, pence, onToggle, onChange, registration, setRegistration
 }: {
   enabled: boolean; pence: number;
   onToggle: (v: boolean) => void;
   onChange: (p: number) => void;
+  registration: any;
+  setRegistration: (r: any) => void;
 }) {
   const presets = [1100, 2100, 5100, 10100, 50100]; // £11, £21, £51, £101, £501
 
@@ -551,6 +574,59 @@ function DonationSection({
               className="flex-1 rounded-lg bg-white border border-gold-300/40 px-3 py-2 text-maroon-900 focus:outline-none focus:border-saffron-500 focus:ring-2 focus:ring-saffron-200/60"
               placeholder="Custom amount"
             />
+          </div>
+
+          {/* Gift Aid — UK only, increases donation by 25% from HMRC */}
+          <div className="mt-5 pt-4 border-t border-saffron-300/40">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={!!registration.giftAid}
+                onChange={(e) => setRegistration({ ...registration, giftAid: e.target.checked })}
+                className="mt-1 w-5 h-5 accent-saffron-600 cursor-pointer"
+              />
+              <div className="flex-1">
+                <div className="font-medium text-maroon-800">Yes, claim Gift Aid (+25% from HMRC)</div>
+                <div className="text-xs text-maroon-900/90 mt-0.5 leading-relaxed">
+                  I confirm that I am a UK taxpayer and I understand that if I pay less Income Tax
+                  and/or Capital Gains Tax than the amount of Gift Aid claimed on all my donations
+                  in that tax year, it is my responsibility to pay any difference. We need your home
+                  address to claim Gift Aid.
+                </div>
+              </div>
+            </label>
+
+            {registration.giftAid && (
+              <div className="grid sm:grid-cols-2 gap-3 mt-4 pl-8">
+                <label className="block text-sm sm:col-span-2">
+                  <span className="font-medium text-maroon-800">Address line 1 <span className="text-saffron-600">*</span></span>
+                  <input
+                    className="mt-1.5 w-full rounded-lg bg-white border border-gold-300/40 px-3 py-2 text-maroon-900 focus:outline-none focus:border-saffron-500"
+                    value={registration.addressLine1}
+                    onChange={(e) => setRegistration({ ...registration, addressLine1: e.target.value })}
+                    placeholder="e.g. 12 Lotus Lane"
+                  />
+                </label>
+                <label className="block text-sm">
+                  <span className="font-medium text-maroon-800">Town / City <span className="text-saffron-600">*</span></span>
+                  <input
+                    className="mt-1.5 w-full rounded-lg bg-white border border-gold-300/40 px-3 py-2 text-maroon-900 focus:outline-none focus:border-saffron-500"
+                    value={registration.town}
+                    onChange={(e) => setRegistration({ ...registration, town: e.target.value })}
+                    placeholder="London"
+                  />
+                </label>
+                <label className="block text-sm">
+                  <span className="font-medium text-maroon-800">Postcode <span className="text-saffron-600">*</span></span>
+                  <input
+                    className="mt-1.5 w-full rounded-lg bg-white border border-gold-300/40 px-3 py-2 text-maroon-900 focus:outline-none focus:border-saffron-500 uppercase"
+                    value={registration.postcode}
+                    onChange={(e) => setRegistration({ ...registration, postcode: e.target.value.toUpperCase() })}
+                    placeholder="SW1A 1AA"
+                  />
+                </label>
+              </div>
+            )}
           </div>
         </div>
       )}

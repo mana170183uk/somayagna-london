@@ -192,9 +192,14 @@ interface ConfirmFromHoldArgs {
   holdId: string;
   primaryName: string;
   relation: Relation;
-  email: string;
+  email?: string | null;
   phone: string;
+  whatsappNumber?: string | null;
   secondParticipantName?: string | null;
+  addressLine1?: string | null;
+  town?: string | null;
+  postcode?: string | null;
+  giftAid?: boolean;
   donationPence?: number;
   payment: { provider: PaymentProvider; providerRef?: string; status: PaymentStatus; raw?: unknown };
 }
@@ -225,9 +230,14 @@ export async function confirmBookingFromHold(args: ConfirmFromHoldArgs) {
         status: 'CONFIRMED' as BookingStatus,
         primaryName: args.primaryName,
         relation: args.relation,
-        email: args.email,
+        email: args.email || null,
         phone: args.phone,
+        whatsappNumber: args.whatsappNumber || null,
         secondParticipantName: args.secondParticipantName ?? null,
+        addressLine1: args.addressLine1 || null,
+        town: args.town || null,
+        postcode: args.postcode || null,
+        giftAid: !!args.giftAid,
         confirmedAt: new Date(),
         payment: {
           create: {

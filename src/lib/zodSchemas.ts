@@ -17,12 +17,20 @@ export const registrationSchema = z.object({
   holdId: z.string().min(1),
   primaryName: z.string().min(2).max(120),
   relation: z.enum(['COUPLE', 'SIBLING', 'INDIVIDUAL']),
-  email: z.string().email(),
+  email: z.string().email().optional().or(z.literal('')),
   phone: z.string().min(5).max(40),
+  whatsappNumber: z.string().min(5).max(40),
   secondParticipantName: z.string().max(120).optional().nullable(),
+  addressLine1: z.string().max(200).optional().or(z.literal('')),
+  town: z.string().max(100).optional().or(z.literal('')),
+  postcode: z.string().max(20).optional().or(z.literal('')),
+  giftAid: z.boolean().optional(),
   donationPence: z.number().int().min(0).max(10_000_00).optional(),
   provider: z.enum(['stripe', 'paypal', 'mock'])
-});
+}).refine(
+  (d) => !d.giftAid || (!!d.addressLine1 && !!d.town && !!d.postcode),
+  { message: 'Gift Aid requires address line 1, town, and postcode.', path: ['giftAid'] }
+);
 export type RegistrationInput = z.infer<typeof registrationSchema>;
 
 export const adminLoginSchema = z.object({

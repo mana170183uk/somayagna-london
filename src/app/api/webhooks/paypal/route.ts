@@ -31,20 +31,27 @@ export async function POST(req: NextRequest) {
         holdId,
         primaryName: reg.primaryName ?? hold.primaryName,
         relation: reg.relation ?? 'INDIVIDUAL',
-        email: reg.email ?? hold.email,
+        email: reg.email ?? hold.email ?? null,
         phone: reg.phone ?? '',
+        whatsappNumber: reg.whatsappNumber ?? null,
         secondParticipantName: reg.secondParticipantName ?? null,
+        addressLine1: reg.addressLine1 ?? null,
+        town: reg.town ?? null,
+        postcode: reg.postcode ?? null,
+        giftAid: !!reg.giftAid,
         donationPence,
         payment: { provider: 'PAYPAL', providerRef: orderId, status: 'SUCCEEDED', raw: event }
       });
       const full = await prisma.booking.findUnique({ where: { id: booking.id }, include: { session: { include: { eventDay: true } } } });
-      if (full) await sendConfirmationEmail({
-        to: full.email, primaryName: full.primaryName, reference: full.reference,
-        date: full.session.eventDay.date, startTime: full.session.startTime,
-        yagnaType: full.session.eventDay.title, kundNumber: full.kundNumber,
-        positions: full.positions, bookingType: full.bookingType, amountPence: full.amountPence,
-        donationPence: full.donationPence
-      });
+      if (full && full.email) {
+        await sendConfirmationEmail({
+          to: full.email, primaryName: full.primaryName, reference: full.reference,
+          date: full.session.eventDay.date, startTime: full.session.startTime,
+          yagnaType: full.session.eventDay.title, kundNumber: full.kundNumber,
+          positions: full.positions, bookingType: full.bookingType, amountPence: full.amountPence,
+          donationPence: full.donationPence
+        });
+      }
     } catch (e) { console.error('PayPal confirm failed', e); }
   }
 

@@ -11,7 +11,14 @@ export async function GET() {
     include: { session: { include: { eventDay: true } }, payment: true }
   });
 
-  const header = ['Reference','Status','Date','Time','Yagna','Kund','Positions','BookingType','Seva (GBP)','Donation (GBP)','Total (GBP)','PaymentStatus','PaymentProvider','PrimaryName','Relation','Email','Phone','SecondParticipant','CreatedAt'];
+  const header = [
+    'Reference','Status','Date','Time','Yagna','Kund','Positions','BookingType',
+    'Seva (GBP)','Donation (GBP)','Total (GBP)',
+    'GiftAid','AddressLine1','Town','Postcode',
+    'PaymentStatus','PaymentProvider',
+    'PrimaryName','Relation','Email','Phone','WhatsApp','SecondParticipant',
+    'CreatedAt'
+  ];
   const rows = bookings.map((b) => [
     b.reference, b.status,
     b.session.eventDay.date.toISOString().slice(0,10), b.session.startTime,
@@ -20,8 +27,10 @@ export async function GET() {
     (b.amountPence/100).toFixed(2),
     (b.donationPence/100).toFixed(2),
     ((b.amountPence + b.donationPence)/100).toFixed(2),
+    b.giftAid ? 'YES' : 'NO',
+    b.addressLine1 ?? '', b.town ?? '', b.postcode ?? '',
     b.payment?.status ?? '', b.payment?.provider ?? '',
-    b.primaryName, b.relation, b.email, b.phone, b.secondParticipantName ?? '',
+    b.primaryName, b.relation, b.email ?? '', b.phone, b.whatsappNumber ?? '', b.secondParticipantName ?? '',
     b.createdAt.toISOString()
   ]);
   const csv = [header, ...rows].map((r) => r.map(escapeCsv).join(',')).join('\n');
