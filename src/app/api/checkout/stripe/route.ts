@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   // Update the hold with the latest contact details (in case user changed them)
   await prisma.bookingHold.update({
     where: { id: hold.id },
-    data: { primaryName: parsed.data.primaryName, email: parsed.data.email }
+    data: { primaryName: parsed.data.primaryName, email: parsed.data.email || hold.email }
   });
 
   // Stash the full registration (relation, phone, second participant) so the

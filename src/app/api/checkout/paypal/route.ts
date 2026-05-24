@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
 
   await prisma.bookingHold.update({
     where: { id: hold.id },
-    data: { primaryName: parsed.data.primaryName, email: parsed.data.email }
+    data: { primaryName: parsed.data.primaryName, email: parsed.data.email || hold.email }
   });
 
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
