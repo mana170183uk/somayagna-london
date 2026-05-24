@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { classNames } from '@/lib/utils';
 import KundMandala from './KundMandala';
+import KundVenuePlan from './KundVenuePlan';
 
 interface SessionLite { id: string; startTime: string; label: string; }
 interface DayLite {
@@ -69,6 +70,7 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
   const [provider, setProvider] = useState<Provider>(() => (enabledProviders[0] as Provider) ?? 'mock');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [layoutMode, setLayoutMode] = useState<'venue' | 'mandala'>('venue');
 
   // Reload availability whenever session changes
   useEffect(() => {
@@ -195,16 +197,32 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
           >
             {loadingAvail && <div className="text-maroon-700/70 text-sm py-6">Loading availability…</div>}
             {availability && selectedDay && selectedSession && (
-              <KundMandala
-                availability={availability}
-                bookingType={bookingType}
-                selectedKund={kundNumber}
-                selectedPositions={positions}
-                dateLabel={formatDate(selectedDay.date)}
-                timeLabel={formatTime(selectedSession.startTime)}
-                yagnaTitle={selectedDay.title}
-                onSelect={(k, ps) => { setKundNumber(k); setPositions(ps); }}
-              />
+              <>
+                <LayoutToggle value={layoutMode} onChange={setLayoutMode} />
+                {layoutMode === 'venue' ? (
+                  <KundVenuePlan
+                    availability={availability}
+                    bookingType={bookingType}
+                    selectedKund={kundNumber}
+                    selectedPositions={positions}
+                    dateLabel={formatDate(selectedDay.date)}
+                    timeLabel={formatTime(selectedSession.startTime)}
+                    yagnaTitle={selectedDay.title}
+                    onSelect={(k, ps) => { setKundNumber(k); setPositions(ps); }}
+                  />
+                ) : (
+                  <KundMandala
+                    availability={availability}
+                    bookingType={bookingType}
+                    selectedKund={kundNumber}
+                    selectedPositions={positions}
+                    dateLabel={formatDate(selectedDay.date)}
+                    timeLabel={formatTime(selectedSession.startTime)}
+                    yagnaTitle={selectedDay.title}
+                    onSelect={(k, ps) => { setKundNumber(k); setPositions(ps); }}
+                  />
+                )}
+              </>
             )}
             <div className="flex justify-between mt-6">
               <BackButton onClick={() => setStep(3)} />
@@ -301,6 +319,35 @@ function StepCard({ title, subtitle, children }: { title: string; subtitle?: str
 }
 
 function BackButton({ onClick }: { onClick: () => void }) { return <button onClick={onClick} className="btn-ghost">← Back</button>; }
+
+function LayoutToggle({ value, onChange }: { value: 'venue' | 'mandala'; onChange: (v: 'venue' | 'mandala') => void }) {
+  return (
+    <div className="flex justify-center mb-2">
+      <div className="inline-flex rounded-full border border-gold-300/60 bg-ivory-100 p-1 text-xs">
+        <button
+          type="button"
+          onClick={() => onChange('venue')}
+          className={classNames(
+            'px-4 py-1.5 rounded-full transition',
+            value === 'venue' ? 'bg-saffron-500 text-ivory-50 shadow-soft-gold' : 'text-maroon-800 hover:bg-ivory-50'
+          )}
+        >
+          Venue plan
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange('mandala')}
+          className={classNames(
+            'px-4 py-1.5 rounded-full transition',
+            value === 'mandala' ? 'bg-saffron-500 text-ivory-50 shadow-soft-gold' : 'text-maroon-800 hover:bg-ivory-50'
+          )}
+        >
+          Mandala
+        </button>
+      </div>
+    </div>
+  );
+}
 function ErrorBox({ children }: { children: React.ReactNode }) {
   return <div role="alert" className="mt-4 rounded-lg border border-maroon-300 bg-maroon-50/60 text-maroon-800 px-4 py-3 text-sm">{children}</div>;
 }
