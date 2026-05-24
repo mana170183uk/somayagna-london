@@ -62,11 +62,22 @@ const config: Config = {
           '0%,100%': { opacity: '0.95', transform: 'scale(1)' },
           '50%':     { opacity: '0.7',  transform: 'scale(1.04)' }
         },
-        slowSpin: { '0%': { transform: 'rotate(0)' }, '100%': { transform: 'rotate(360deg)' } }
+        slowSpin: { '0%': { transform: 'rotate(0)' }, '100%': { transform: 'rotate(360deg)' } },
+        glowPulse: {
+          '0%,100%': { opacity: '0.55', transform: 'scale(1)' },
+          '50%':     { opacity: '0.85', transform: 'scale(1.06)' }
+        },
+        emberRise: {
+          '0%':   { opacity: '0', transform: 'translateY(0) scale(1)' },
+          '25%':  { opacity: '0.9' },
+          '100%': { opacity: '0', transform: 'translateY(-24px) scale(0.4)' }
+        }
       },
       animation: {
         flicker: 'flicker 2.4s ease-in-out infinite',
-        'slow-spin': 'slowSpin 60s linear infinite'
+        'slow-spin': 'slowSpin 60s linear infinite',
+        'glow-pulse': 'glowPulse 3.6s ease-in-out infinite',
+        'ember-rise': 'emberRise 2.8s ease-out infinite'
       }
     }
   },

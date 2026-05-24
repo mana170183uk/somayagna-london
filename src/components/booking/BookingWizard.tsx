@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { classNames } from '@/lib/utils';
+import KundMandala from './KundMandala';
 
 interface SessionLite { id: string; startTime: string; label: string; }
 interface DayLite {
@@ -193,12 +194,15 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
             subtitle={availability ? `${availability.remaining} of ${availability.capacity} seats available` : 'Loading availability…'}
           >
             {loadingAvail && <div className="text-maroon-700/70 text-sm py-6">Loading availability…</div>}
-            {availability && (
-              <KundGrid
+            {availability && selectedDay && selectedSession && (
+              <KundMandala
                 availability={availability}
                 bookingType={bookingType}
                 selectedKund={kundNumber}
                 selectedPositions={positions}
+                dateLabel={formatDate(selectedDay.date)}
+                timeLabel={formatTime(selectedSession.startTime)}
+                yagnaTitle={selectedDay.title}
                 onSelect={(k, ps) => { setKundNumber(k); setPositions(ps); }}
               />
             )}
@@ -384,101 +388,6 @@ function BookingTypeGrid({ value, onChange }: { value: BookingType; onChange: (t
         <div className="h-display text-3xl mt-2">£501</div>
         <div className="text-xs mt-2 opacity-80">All three positions A, B & C together</div>
       </button>
-    </div>
-  );
-}
-
-function KundGrid({
-  availability, bookingType, selectedKund, selectedPositions, onSelect
-}: {
-  availability: Availability;
-  bookingType: BookingType;
-  selectedKund: number | null;
-  selectedPositions: ('A'|'B'|'C')[];
-  onSelect: (k: number, ps: ('A'|'B'|'C')[]) => void;
-}) {
-  return (
-    <div>
-      <Legend />
-      <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-        {availability.kunds.map((k) => {
-          const isSelected = selectedKund === k.number;
-          const fullKundDisabled = bookingType === 'FULL_KUND' && !k.fullyFree;
-          return (
-            <div
-              key={k.id}
-              className={classNames(
-                'rounded-2xl border p-4 bg-ivory-50 transition',
-                fullKundDisabled ? 'opacity-50' : '',
-                isSelected ? 'border-saffron-500 shadow-soft-gold' : 'border-gold-300/50'
-              )}
-            >
-              <div className="flex items-center justify-between">
-                <div className="text-xs tracking-widest uppercase text-maroon-700">Kund</div>
-                <div className="h-display text-2xl text-maroon-900">{k.number}</div>
-              </div>
-              <div className="mt-3 grid grid-cols-3 gap-1.5">
-                {k.positions.map((p) => {
-                  const isPickedPos = isSelected && selectedPositions.includes(p.label);
-                  const disabled = p.state !== 'FREE' || fullKundDisabled;
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      disabled={disabled}
-                      aria-label={`Kund ${k.number} position ${p.label} ${p.state.toLowerCase()}`}
-                      onClick={() => {
-                        if (bookingType === 'FULL_KUND') {
-                          if (k.fullyFree) onSelect(k.number, ['A','B','C']);
-                        } else {
-                          onSelect(k.number, [p.label]);
-                        }
-                      }}
-                      className={classNames(
-                        'aspect-square rounded-md flex items-center justify-center text-sm font-medium border transition',
-                        p.state === 'BOOKED' && 'bg-maroon-700 text-ivory-50 border-maroon-700 cursor-not-allowed',
-                        p.state === 'HELD' && 'bg-saffron-100 text-saffron-800 border-saffron-300 cursor-not-allowed',
-                        p.state === 'FREE' && !fullKundDisabled && !isPickedPos && 'bg-ivory-50 text-maroon-800 border-gold-300 hover:border-saffron-400',
-                        p.state === 'FREE' && fullKundDisabled && 'bg-ivory-50 text-maroon-800/50 border-gold-300',
-                        isPickedPos && 'bg-saffron-500 text-ivory-50 border-saffron-500 shadow-soft-gold'
-                      )}
-                    >
-                      {p.state === 'HELD' ? '◷' : p.label}
-                    </button>
-                  );
-                })}
-              </div>
-              {bookingType === 'FULL_KUND' && (
-                <button
-                  type="button"
-                  disabled={!k.fullyFree}
-                  onClick={() => onSelect(k.number, ['A','B','C'])}
-                  className={classNames(
-                    'w-full mt-3 rounded-md text-xs font-medium py-1.5 transition',
-                    k.fullyFree
-                      ? isSelected
-                        ? 'bg-saffron-500 text-ivory-50'
-                        : 'bg-saffron-100 text-saffron-800 hover:bg-saffron-200'
-                      : 'bg-ivory-100 text-maroon-900/40'
-                  )}
-                >
-                  {k.fullyFree ? 'Reserve entire Kund' : 'Not fully free'}
-                </button>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function Legend() {
-  return (
-    <div className="flex items-center gap-4 text-xs text-maroon-900/70">
-      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-ivory-50 border border-gold-300" /> Free</span>
-      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-saffron-100 border border-saffron-300" /> Held</span>
-      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-maroon-700" /> Booked</span>
     </div>
   );
 }

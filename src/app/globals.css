@@ -82,6 +82,6 @@ body {
 
 /* Reduce motion */
 @media (prefers-reduced-motion: reduce) {
-  .animate-flicker, .animate-slow-spin { animation: none !important; }
+  .animate-flicker, .animate-slow-spin, .animate-glow-pulse, .animate-ember-rise { animation: none !important; }
   html { scroll-behavior: auto; }
 }
