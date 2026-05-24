@@ -37,7 +37,7 @@ export default async function AdminHome() {
         <div>
           <p className="eyebrow mb-2">Organiser Dashboard</p>
           <h1 className="h-display text-3xl text-maroon-800">All bookings, at a glance</h1>
-          <p className="text-sm text-maroon-700/80">Signed in as {admin.email}</p>
+          <p className="text-sm text-maroon-700">Signed in as {admin.email}</p>
         </div>
         <div className="flex gap-2">
           <a href="/api/admin/export" className="btn-secondary">Export CSV</a>
@@ -72,11 +72,11 @@ export default async function AdminHome() {
                   >
                     <div className="col-span-3 h-display text-xl text-maroon-800">{s.label}</div>
                     <div className="col-span-2 h-display text-lg text-saffron-700">{formatTime(s.startTime)}</div>
-                    <div className="col-span-3 text-sm text-maroon-900/70">
+                    <div className="col-span-3 text-sm text-maroon-900/90">
                       <span className="font-medium text-maroon-800">{taken}</span>/{SESSION_CAPACITY} taken
                       <span className="ml-3 text-maroon-700">{remaining} free</span>
                     </div>
-                    <div className="col-span-3 text-sm text-maroon-900/70 tabular-nums">{formatGBP(revenue)}</div>
+                    <div className="col-span-3 text-sm text-maroon-900/90 tabular-nums">{formatGBP(revenue)}</div>
                     <div className="col-span-1 text-right text-saffron-700">→</div>
                   </Link>
                 );
@@ -92,7 +92,7 @@ export default async function AdminHome() {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="card p-5">
-      <div className="text-xs tracking-widest uppercase text-maroon-700/70">{label}</div>
+      <div className="text-xs tracking-widest uppercase text-maroon-700/90">{label}</div>
       <div className="h-display text-3xl text-maroon-800 mt-1">{value}</div>
     </div>
   );

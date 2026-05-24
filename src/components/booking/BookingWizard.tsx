@@ -199,7 +199,7 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
             title={bookingType === 'FULL_KUND' ? 'Select an available Kund' : 'Select Kund & position'}
             subtitle={availability ? `${availability.remaining} of ${availability.capacity} seats available` : 'Loading availability…'}
           >
-            {loadingAvail && <div className="text-maroon-700/70 text-sm py-6">Loading availability…</div>}
+            {loadingAvail && <div className="text-maroon-700/90 text-sm py-6">Loading availability…</div>}
             {availability && selectedDay && selectedSession && (
               <>
                 <LayoutToggle value={layoutMode} onChange={setLayoutMode} />
@@ -324,7 +324,7 @@ function StepCard({ title, subtitle, children }: { title: string; subtitle?: str
   return (
     <section className="card p-6 md:p-8">
       <h2 className="h-display text-2xl text-maroon-800">{title}</h2>
-      {subtitle && <p className="text-sm text-maroon-900/65 mt-1">{subtitle}</p>}
+      {subtitle && <p className="text-sm text-maroon-900/85 mt-1">{subtitle}</p>}
       <div className="mt-6">{children}</div>
     </section>
   );
@@ -508,7 +508,7 @@ function DonationSection({
         />
         <div className="flex-1">
           <div className="h-display text-lg text-maroon-800">Add a charity donation</div>
-          <div className="text-xs text-maroon-900/70 mt-0.5 leading-relaxed">
+          <div className="text-xs text-maroon-900/90 mt-0.5 leading-relaxed">
             100% of donations go to <strong>Unity in Divinity (UK Registered Charity)</strong>, the
             organising body of this programme. Your donation is collected together with your seva
             payment and will appear as a separate line on your receipt.
@@ -623,7 +623,7 @@ function SummaryCard({ day, session, bookingType, kundNumber, positions, basePen
 }) {
   return (
     <div className="card p-6 sticky top-24">
-      <div className="text-xs tracking-widest uppercase text-maroon-700/70">Your seva</div>
+      <div className="text-xs tracking-widest uppercase text-maroon-700/90">Your seva</div>
       <div className="h-display text-2xl text-maroon-800 mt-1">Booking summary</div>
       <dl className="mt-4 space-y-2 text-sm">
         <Row k="Date" v={day ? formatDate(day.date) : '—'} />
@@ -638,10 +638,10 @@ function SummaryCard({ day, session, bookingType, kundNumber, positions, basePen
         {donationPence > 0 && <Row k="Donation (charity)" v={gbp(donationPence)} />}
       </div>
       <div className="mt-3 pt-3 border-t border-gold-200 flex items-center justify-between">
-        <span className="text-sm text-maroon-700/80">Total</span>
+        <span className="text-sm text-maroon-700">Total</span>
         <span className="h-display text-3xl text-saffron-700">{gbp(totalPence)}</span>
       </div>
-      <p className="text-xs text-maroon-900/55 mt-3 leading-relaxed">
+      <p className="text-xs text-maroon-900/85 mt-3 leading-relaxed">
         Payment is processed in £ GBP. Your seat will be confirmed by email immediately after successful payment.
       </p>
     </div>
@@ -651,7 +651,7 @@ function SummaryCard({ day, session, bookingType, kundNumber, positions, basePen
 function Row({ k, v }: { k: string; v: string }) {
   return (
     <div className="flex justify-between gap-3">
-      <dt className="text-maroon-700/70">{k}</dt>
+      <dt className="text-maroon-700/90">{k}</dt>
       <dd className="text-maroon-900 text-right">{v}</dd>
     </div>
   );

@@ -44,7 +44,7 @@ export default function KundMandala({
         <h3 className="h-display text-2xl md:text-3xl text-maroon-800">
           {dateLabel} · <span className="text-saffron-700">{timeLabel}</span>
         </h3>
-        <p className="text-sm text-maroon-900/65 mt-1">
+        <p className="text-sm text-maroon-900/85 mt-1">
           {availability.remaining} of {availability.capacity} seats remain
           {bookingType === 'FULL_KUND' ? ' · choose a Kund with all positions free' : ' · click any free position (A · B · C)'}
         </p>
@@ -130,7 +130,7 @@ export default function KundMandala({
           <div className="h-display text-2xl mt-1">
             Kund {selectedKund} · {bookingType === 'FULL_KUND' ? 'All positions (A · B · C)' : `Position ${selectedPositions.join(', ')}`}
           </div>
-          <div className="text-sm mt-1 text-gold-100/85">{dateLabel} · {timeLabel}</div>
+          <div className="text-sm mt-1 text-gold-100">{dateLabel} · {timeLabel}</div>
         </div>
       )}
     </div>
@@ -145,7 +145,7 @@ function Legend() {
     { label: 'Selected', cls: 'bg-saffron-500 border border-saffron-700' }
   ];
   return (
-    <div className="flex items-center justify-center gap-4 text-xs text-maroon-900/70">
+    <div className="flex items-center justify-center gap-4 text-xs text-maroon-900/90">
       {items.map((it) => (
         <span key={it.label} className="flex items-center gap-1.5">
           <span className={classNames('w-3 h-3 rounded-full', it.cls)} />

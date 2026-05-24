@@ -8,7 +8,7 @@ export default function Pending() {
     <div className="min-h-screen bg-ivory-100 text-maroon-900 flex flex-col items-center justify-center px-6 text-center">
       <OmGlyph className="w-12 h-12 text-maroon-700 animate-slow-spin" />
       <h1 className="h-display text-3xl md:text-4xl mt-4 text-maroon-800">Confirming your seva…</h1>
-      <p className="mt-2 max-w-md text-maroon-900/70">
+      <p className="mt-2 max-w-md text-maroon-900/90">
         We have received your payment and are reserving your seat. A confirmation email will arrive shortly.
         If this page does not redirect within a minute, please check your inbox for the booking reference.
       </p>

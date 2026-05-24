@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { EVENT, formatGBP, PRICE_FULL_KUND_PENCE, PRICE_SINGLE_PENCE } from '@/lib/constants';
 import { Mandala, Diya, OmGlyph, LotusBorder } from '@/components/ui/Ornaments';
+import { Logo } from '@/components/ui/Logo';
 import StickyCTA from '@/components/landing/StickyCTA';
 
 export default function Home() {
@@ -32,13 +33,10 @@ function Header() {
   return (
     <header className="sticky top-0 z-40 backdrop-blur-md bg-ivory-50/80 border-b border-gold-200/40">
       <div className="container-tight flex items-center justify-between py-3">
-        <Link href="/" className="flex items-center gap-3 group">
-          <span className="text-maroon-700"><OmGlyph className="w-8 h-8" /></span>
-          <span className="h-display text-xl md:text-2xl text-maroon-800 leading-none">
-            SomaYagna <span className="text-saffron-600">London</span>
-          </span>
+        <Link href="/" className="group" aria-label="SomaYagna London — home">
+          <Logo size="md" />
         </Link>
-        <nav className="hidden md:flex items-center gap-6 text-sm text-maroon-800/80">
+        <nav className="hidden md:flex items-center gap-6 text-sm text-maroon-800">
           <a href="#timeline" className="hover:text-maroon-700">Programme</a>
           <a href="#booking" className="hover:text-maroon-700">How to book</a>
           <a href="#pricing" className="hover:text-maroon-700">Seva offerings</a>
@@ -76,16 +74,16 @@ function Hero() {
 
         <div className="mt-8 flex flex-col md:flex-row md:items-end md:gap-12 gap-6 text-ivory-100">
           <div>
-            <div className="text-xs uppercase tracking-[0.32em] text-gold-200/80 mb-2">When</div>
+            <div className="text-xs uppercase tracking-[0.32em] text-gold-200 mb-2">When</div>
             <div className="h-display text-3xl md:text-4xl">
               {EVENT.startDate} – {EVENT.endDate}
               <span className="text-gold-300 ml-2">{EVENT.year}</span>
             </div>
           </div>
           <div>
-            <div className="text-xs uppercase tracking-[0.32em] text-gold-200/80 mb-2">Where</div>
+            <div className="text-xs uppercase tracking-[0.32em] text-gold-200 mb-2">Where</div>
             <div className="h-display text-2xl md:text-3xl">{EVENT.venueName}</div>
-            <div className="text-sm text-ivory-100/70">{EVENT.venueAddress}</div>
+            <div className="text-sm text-ivory-100/90">{EVENT.venueAddress}</div>
           </div>
         </div>
 
@@ -105,7 +103,7 @@ function Hero() {
           </a>
         </div>
 
-        <div className="mt-12 flex items-center gap-6 text-ivory-100/60 text-xs">
+        <div className="mt-12 flex items-center gap-6 text-ivory-100/85 text-xs">
           <span className="flex items-center gap-2">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-gold-300 animate-flicker" />
             Live availability updates
@@ -147,7 +145,7 @@ function SpiritualIntro() {
             great Vedic rites. Conducted by a Yagnacharya with the support of trained Brahmin priests,
             it invokes blessings of health, harmony, and well-being for all who participate.
           </p>
-          <p className="text-maroon-700/80 italic">
+          <p className="text-maroon-700 italic">
             “Through rhythmic chants and sacred offerings, the Yajna seeks to harmonise the cosmos
             and nurture the well-being of all beings.”
           </p>
@@ -177,7 +175,7 @@ function Timeline() {
         <div className="text-center max-w-3xl mx-auto mb-12">
           <p className="eyebrow mb-3">The Programme</p>
           <h2 className="h-display text-4xl md:text-5xl text-maroon-800">Eight days of sacred ritual</h2>
-          <p className="mt-4 text-maroon-900/70">
+          <p className="mt-4 text-maroon-900/90">
             From the inaugural welcome on 14 June through the concluding day on 21 June, each day carries its own significance.
           </p>
         </div>
@@ -189,7 +187,7 @@ function Timeline() {
                 {t.date}
               </div>
               <div className="h-display text-lg leading-tight text-maroon-900">{t.label}</div>
-              <p className="text-xs text-maroon-900/60 mt-2">{t.desc}</p>
+              <p className="text-xs text-maroon-900/85 mt-2">{t.desc}</p>
               <div className={`absolute inset-x-0 bottom-0 h-1 ${t.type === 'welcome' ? 'bg-gold-400' : t.type === 'purshotam' ? 'bg-saffron-500' : 'bg-maroon-600'}`} />
             </li>
           ))}
@@ -234,7 +232,7 @@ function PurshotamSection() {
             ].map(([k, v]) => (
               <li key={k} className="flex gap-3">
                 <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-saffron-500 shrink-0" />
-                <div><strong className="text-maroon-800">{k}.</strong> <span className="text-maroon-900/75">{v}</span></div>
+                <div><strong className="text-maroon-800">{k}.</strong> <span className="text-maroon-900/90">{v}</span></div>
               </li>
             ))}
           </ul>
@@ -277,7 +275,7 @@ function VishnuGopalSection() {
             <div className="text-center p-8">
               <Diya className="mx-auto w-20 text-saffron-700" />
               <div className="h-display text-3xl mt-4">Daily Yagna</div>
-              <div className="text-ivory-100/70 mt-2">Six consecutive days</div>
+              <div className="text-ivory-100/90 mt-2">Six consecutive days</div>
               <div className="mt-6 inline-flex items-center gap-2 text-xs tracking-widest uppercase text-gold-200">
                 Morning · Afternoon · Late Afternoon
               </div>
@@ -311,7 +309,7 @@ function HowBookingWorks() {
             <li key={title} className="card p-6 relative">
               <div className="text-gold-500 text-sm tracking-widest">STEP {String(i + 1).padStart(2, '0')}</div>
               <div className="h-display text-xl mt-2 text-maroon-800">{title}</div>
-              <p className="mt-2 text-sm text-maroon-900/70">{body}</p>
+              <p className="mt-2 text-sm text-maroon-900/90">{body}</p>
             </li>
           ))}
         </ol>
@@ -335,7 +333,7 @@ function KundExplainer() {
             and <strong>C</strong>. You may reserve a single seat — ideal for a couple or siblings — or you
             may dedicate an entire Kund for your family.
           </p>
-          <p className="mt-3 text-maroon-900/70">
+          <p className="mt-3 text-maroon-900/90">
             The booking grid updates in real time. Held seats are reserved for ten minutes while another
             family completes their payment; if they don’t, the seat returns to availability automatically.
           </p>
@@ -349,7 +347,7 @@ function KundExplainer() {
 function KundVisual() {
   return (
     <div className="card p-8 relative">
-      <div className="text-xs tracking-widest uppercase text-maroon-700/70 mb-2">A single Kund</div>
+      <div className="text-xs tracking-widest uppercase text-maroon-700/90 mb-2">A single Kund</div>
       <div className="h-display text-2xl text-maroon-800 mb-6">Three sacred positions</div>
       <div className="relative aspect-square max-w-sm mx-auto">
         {/* central altar */}
@@ -397,7 +395,7 @@ function Pricing() {
         <div className="text-center max-w-2xl mx-auto mb-12">
           <p className="eyebrow mb-3">Seva offerings</p>
           <h2 className="h-display text-4xl md:text-5xl text-maroon-800">Two ways to participate</h2>
-          <p className="mt-3 text-maroon-900/70">All offerings are inclusive — every yajamana receives the same blessings.</p>
+          <p className="mt-3 text-maroon-900/90">All offerings are inclusive — every yajamana receives the same blessings.</p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
@@ -444,12 +442,12 @@ function PriceCard({ title, subtitle, price, features, cta, href, highlight = fa
           Discounted package
         </span>
       )}
-      <div className={`text-xs tracking-widest uppercase ${highlight ? 'text-gold-200' : 'text-maroon-700/70'}`}>{subtitle}</div>
+      <div className={`text-xs tracking-widest uppercase ${highlight ? 'text-gold-200' : 'text-maroon-700/90'}`}>{subtitle}</div>
       <div className={`h-display text-3xl mt-1 ${highlight ? '' : 'text-maroon-800'}`}>{title}</div>
       <div className="mt-6 flex items-baseline gap-2">
         <span className={`h-display text-5xl ${highlight ? 'text-gold-200' : 'text-saffron-700'}`}>{formatGBP(price)}</span>
       </div>
-      <ul className={`mt-6 space-y-2 text-sm ${highlight ? 'text-ivory-100/90' : 'text-maroon-900/75'}`}>
+      <ul className={`mt-6 space-y-2 text-sm ${highlight ? 'text-ivory-100/90' : 'text-maroon-900/90'}`}>
         {features.map((f) => (
           <li key={f} className="flex gap-2">
             <span className={`mt-1 h-1.5 w-1.5 rounded-full shrink-0 ${highlight ? 'bg-gold-300' : 'bg-saffron-500'}`} />
@@ -473,7 +471,7 @@ function DailySchedule() {
         <div className="text-center max-w-2xl mx-auto mb-10">
           <p className="eyebrow mb-3">Daily Schedule</p>
           <h2 className="h-display text-4xl md:text-5xl text-maroon-800">Three sessions, every active day</h2>
-          <p className="mt-3 text-maroon-900/70">15 June onwards — same timings every day.</p>
+          <p className="mt-3 text-maroon-900/90">15 June onwards — same timings every day.</p>
         </div>
         <div className="grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
           {[
@@ -484,7 +482,7 @@ function DailySchedule() {
             <div key={label} className="card p-6 text-center">
               <div className="text-xs tracking-widest uppercase text-saffron-700">{label}</div>
               <div className="h-display text-3xl mt-2 text-maroon-800">{time}</div>
-              <div className="text-xs text-maroon-900/60 mt-2">33 seats · 11 Kunds</div>
+              <div className="text-xs text-maroon-900/85 mt-2">33 seats · 11 Kunds</div>
             </div>
           ))}
         </div>
@@ -525,7 +523,7 @@ function FAQ() {
                 <span className="h-display text-xl text-maroon-800">{q}</span>
                 <span className="text-saffron-600 text-2xl leading-none mt-1 transition group-open:rotate-45">+</span>
               </summary>
-              <p className="mt-3 text-maroon-900/75 leading-relaxed">{a}</p>
+              <p className="mt-3 text-maroon-900/90 leading-relaxed">{a}</p>
             </details>
           ))}
         </div>
@@ -544,7 +542,7 @@ function Contact() {
         <div>
           <p className="eyebrow text-gold-200 mb-3">Organiser support</p>
           <h2 className="h-display text-4xl md:text-5xl">We are here to help</h2>
-          <p className="mt-4 text-ivory-100/80 max-w-md">
+          <p className="mt-4 text-ivory-100 max-w-md">
             For booking changes, group reservations, or any question about your participation, please reach the
             programme team.
           </p>
@@ -563,7 +561,7 @@ function Contact() {
 function ContactRow({ label, value, href }: { label: string; value: string; href?: string }) {
   return (
     <div className="border-b border-gold-300/20 pb-3">
-      <div className="text-xs uppercase tracking-widest text-gold-200/70">{label}</div>
+      <div className="text-xs uppercase tracking-widest text-gold-200">{label}</div>
       {href ? (
         <a href={href} className="h-display text-2xl hover:text-gold-200 transition">{value}</a>
       ) : (
@@ -577,7 +575,7 @@ function ContactRow({ label, value, href }: { label: string; value: string; href
 
 function Footer() {
   return (
-    <footer className="bg-maroon-900 text-ivory-100/70 border-t border-gold-300/20">
+    <footer className="bg-maroon-900 text-ivory-100/90 border-t border-gold-300/20">
       <div className="container-tight py-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-sm">
         <div className="flex items-center gap-2">
           <span className="text-gold-300"><OmGlyph className="w-5 h-5" /></span>

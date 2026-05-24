@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { OmGlyph } from '@/components/ui/Ornaments';
+import { LogoMark } from '@/components/ui/Logo';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -7,7 +7,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <header className="border-b border-gold-200 bg-ivory-50 sticky top-0 z-10">
         <div className="container-tight flex items-center justify-between py-3">
           <Link href="/admin" className="flex items-center gap-2 text-maroon-800">
-            <OmGlyph className="w-5 h-5 text-maroon-700" />
+            <LogoMark className="w-7 h-7 text-gold-500" />
             <span className="h-display text-lg">SomaYagna · Admin</span>
           </Link>
           <form action="/api/admin/logout" method="post">

@@ -13,14 +13,17 @@ body {
   background-color: var(--color-bg);
   color: var(--color-fg);
   font-feature-settings: "ss01", "cv11";
+  font-weight: 450;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Cinematic vertical rhythm */
 .section { @apply py-20 md:py-28; }
 .container-tight { @apply max-w-6xl mx-auto px-5 md:px-8; }
 
-/* Display headings */
-.h-display { @apply font-display tracking-tight leading-[1.05]; }
+/* Display headings — Cormorant looks thin at default 400, bump to 600 */
+.h-display { @apply font-display font-semibold tracking-tight leading-[1.05]; }
 
 /* Pill/eyebrow */
 .eyebrow {

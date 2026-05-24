@@ -43,7 +43,7 @@ export default function KundVenuePlan({
         <h3 className="h-display text-2xl md:text-3xl text-maroon-800">
           {dateLabel} · <span className="text-saffron-700">{timeLabel}</span>
         </h3>
-        <p className="text-sm text-maroon-900/65 mt-1">
+        <p className="text-sm text-maroon-900/85 mt-1">
           Venue plan view · {availability.remaining} of {availability.capacity} seats remain
         </p>
       </div>
@@ -118,7 +118,7 @@ export default function KundVenuePlan({
           <div className="h-display text-2xl mt-1">
             Kund {selectedKund} · {bookingType === 'FULL_KUND' ? 'All positions (A · B · C)' : `Position ${selectedPositions.join(', ')}`}
           </div>
-          <div className="text-sm mt-1 text-gold-100/85">{dateLabel} · {timeLabel}</div>
+          <div className="text-sm mt-1 text-gold-100">{dateLabel} · {timeLabel}</div>
         </div>
       )}
     </div>
@@ -142,7 +142,7 @@ function SomYagyaPanel() {
 
       <div className="relative h-full flex flex-col items-center justify-between p-4 md:p-6">
         {/* Dimension label */}
-        <div className="self-start text-[10px] tracking-widest uppercase text-gold-200/80">60 ft</div>
+        <div className="self-start text-[10px] tracking-widest uppercase text-gold-200">60 ft</div>
 
         {/* Big fire altar */}
         <div className="flex-1 flex items-center justify-center w-full">
@@ -152,7 +152,7 @@ function SomYagyaPanel() {
         {/* Label */}
         <div className="text-center">
           <div className="h-display text-2xl md:text-3xl text-saffron-200 tracking-wider">SOM YAGYA</div>
-          <div className="text-[10px] tracking-[0.4em] uppercase text-gold-200/80 mt-1">120 × 60</div>
+          <div className="text-[10px] tracking-[0.4em] uppercase text-gold-200 mt-1">120 × 60</div>
         </div>
       </div>
     </div>
@@ -278,7 +278,7 @@ function VenueKundTile({
       </div>
 
       {/* "FAMILY 2" tag — matches spec image */}
-      <div className="mt-1.5 text-center text-[8px] tracking-widest uppercase text-maroon-700/60">FAMILY 2</div>
+      <div className="mt-1.5 text-center text-[8px] tracking-widest uppercase text-maroon-700/85">FAMILY 2</div>
 
       {/* Full kund affordance */}
       {bookingType === 'FULL_KUND' && (
@@ -330,7 +330,7 @@ function Kund1Panel({
         <div className="flex-shrink-0">
           <div className="h-display text-3xl text-maroon-800">Kund {kund.number}</div>
           <div className="text-[10px] tracking-widest uppercase text-maroon-700 mt-1">Shree Vishnu Gopal Peeth Stapan</div>
-          <div className="text-[10px] tracking-widest uppercase text-maroon-700/60">120 × 40</div>
+          <div className="text-[10px] tracking-widest uppercase text-maroon-700/85">120 × 40</div>
         </div>
 
         {/* Position dots */}
@@ -408,7 +408,7 @@ function MiniFlame({ size = 24, booked = false }: { size?: number; booked?: bool
 }
 
 function ParikramaLabel({ position }: { position: 'top' | 'bottom' | 'left' | 'right' }) {
-  const baseCls = 'absolute text-[9px] tracking-[0.3em] uppercase text-maroon-700/60 pointer-events-none';
+  const baseCls = 'absolute text-[9px] tracking-[0.3em] uppercase text-maroon-700/85 pointer-events-none';
   const cls = {
     top: 'top-1 left-1/2 -translate-x-1/2',
     bottom: 'bottom-1 left-1/2 -translate-x-1/2',

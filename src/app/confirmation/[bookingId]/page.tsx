@@ -55,7 +55,7 @@ export default async function Confirmation({ params }: { params: Promise<{ booki
             <Row k="Venue" v={`${EVENT.venueName}, ${EVENT.venueAddress}`} />
 
             <hr className="border-gold-200 my-4" />
-            <p className="text-sm text-maroon-900/75 leading-relaxed">
+            <p className="text-sm text-maroon-900/90 leading-relaxed">
               A confirmation email is on its way to <strong>{booking.email}</strong>.
               Please arrive 20 minutes before your session. Modest clothing is recommended.
               For any changes, contact us at{' '}
@@ -76,7 +76,7 @@ export default async function Confirmation({ params }: { params: Promise<{ booki
 function Row({ k, v }: { k: string; v: string }) {
   return (
     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline gap-1 border-b border-gold-100 pb-3">
-      <dt className="text-xs uppercase tracking-widest text-maroon-700/70">{k}</dt>
+      <dt className="text-xs uppercase tracking-widest text-maroon-700/90">{k}</dt>
       <dd className="h-display text-xl text-maroon-900">{v}</dd>
     </div>
   );

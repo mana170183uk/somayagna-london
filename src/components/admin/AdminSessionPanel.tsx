@@ -53,13 +53,13 @@ export default function AdminSessionPanel({ sessionId, kunds }: { sessionId: str
                       <span className="h-display text-base text-maroon-800">Position {p.label}</span>
                       {p.booking ? (
                         <span className="text-[10px] uppercase tracking-widest text-saffron-700">{p.booking.bookingType === 'FULL_KUND' ? 'Full Kund' : 'Single'}</span>
-                      ) : <span className="text-xs text-maroon-700/60">Free</span>}
+                      ) : <span className="text-xs text-maroon-700/85">Free</span>}
                     </div>
                     {p.booking ? (
                       <div className="mt-1">
                         <div className="text-maroon-900">{p.booking.primaryName}</div>
-                        <div className="text-xs text-maroon-700/70">{p.booking.email}</div>
-                        <div className="text-xs text-maroon-700/70">{p.booking.reference} · {gbp(p.booking.amountPence)} · {p.booking.paymentStatus ?? '—'}</div>
+                        <div className="text-xs text-maroon-700/90">{p.booking.email}</div>
+                        <div className="text-xs text-maroon-700/90">{p.booking.reference} · {gbp(p.booking.amountPence)} · {p.booking.paymentStatus ?? '—'}</div>
                         <div className="mt-2 flex gap-2">
                           <button className="btn-ghost !py-1 !px-2 !text-xs" onClick={() => setEditing(p.booking!)}>Edit</button>
                           <button disabled={busy} className="btn-ghost !py-1 !px-2 !text-xs text-maroon-700" onClick={() => cancel(p.booking!.id)}>Cancel</button>

@@ -39,7 +39,7 @@ export default async function SessionDetail({ params }: { params: Promise<{ sess
         <h1 className="h-display text-3xl text-maroon-800">
           {formatDateLong(session.eventDay.date)} — {formatTime(session.startTime)}
         </h1>
-        <p className="text-sm text-maroon-700/80 mt-1">
+        <p className="text-sm text-maroon-700 mt-1">
           {taken}/{SESSION_CAPACITY} positions taken · {SESSION_CAPACITY - taken} remaining
         </p>
       </header>

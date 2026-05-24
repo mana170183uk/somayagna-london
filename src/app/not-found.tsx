@@ -6,7 +6,7 @@ export default function NotFound() {
       <div>
         <OmGlyph className="w-12 h-12 mx-auto text-maroon-700" />
         <h1 className="h-display text-5xl text-maroon-800 mt-4">Page not found</h1>
-        <p className="text-maroon-900/70 mt-2 max-w-md">The path you followed does not exist.</p>
+        <p className="text-maroon-900/90 mt-2 max-w-md">The path you followed does not exist.</p>
         <Link href="/" className="btn-primary mt-6">Return home</Link>
       </div>
     </div>

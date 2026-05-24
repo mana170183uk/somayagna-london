@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="flame" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFE08A"/>
+      <stop offset="50%" stop-color="#FB9A2C"/>
+      <stop offset="100%" stop-color="#8B2727"/>
+    </linearGradient>
+    <linearGradient id="brick" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#9A480A"/>
+      <stop offset="100%" stop-color="#400F0F"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Sacred medallion background -->
+  <circle cx="32" cy="32" r="31" fill="#400F0F"/>
+  <circle cx="32" cy="32" r="29" fill="none" stroke="#E2BB58" stroke-width="1.4"/>
+  <circle cx="32" cy="32" r="25" fill="none" stroke="#E2BB58" stroke-width="0.6" opacity="0.55"/>
+
+  <!-- Cardinal sparkles -->
+  <circle cx="32" cy="6" r="0.9" fill="#FFE08A"/>
+  <circle cx="6" cy="32" r="0.9" fill="#FFE08A"/>
+  <circle cx="58" cy="32" r="0.9" fill="#FFE08A"/>
+  <circle cx="32" cy="58" r="0.9" fill="#FFE08A"/>
+
+  <!-- Fire altar base -->
+  <rect x="20" y="40" width="24" height="12" rx="1" fill="url(#brick)" stroke="#2C0A0A" stroke-width="0.6"/>
+  <rect x="22" y="38" width="20" height="4" rx="0.5" fill="#2C0A0A"/>
+  <line x1="20" y1="46" x2="44" y2="46" stroke="#2C0A0A" stroke-width="0.4" opacity="0.6"/>
+
+  <!-- Outer flame -->
+  <path d="M32 12 Q42 22 40 36 Q36 44 32 44 Q28 44 24 36 Q22 22 32 12 Z" fill="url(#flame)" opacity="0.95"/>
+  <!-- Inner bright flame -->
+  <path d="M32 19 Q38 25 36.5 36 Q34 41 32 41 Q30 41 27.5 36 Q26 25 32 19 Z" fill="#FFE08A" opacity="0.9"/>
+  <!-- Core white-hot -->
+  <ellipse cx="32" cy="35" rx="1.6" ry="3.5" fill="#FFFCF6"/>
+</svg>
