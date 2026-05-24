@@ -23,13 +23,14 @@ interface ConfirmEmailInput {
 export async function sendConfirmationEmail(i: ConfirmEmailInput): Promise<void> {
   const subject = `Your ${EVENT.name} reservation — ${i.reference}`;
   const html = renderHtml(i);
+  const text = renderText(i);
 
   const key = process.env.RESEND_API_KEY;
   if (!key) {
     console.log('\n────── EMAIL (dev mode — no RESEND_API_KEY) ──────');
     console.log('To:', i.to);
     console.log('Subject:', subject);
-    console.log(html.replace(/<[^>]+>/g, '').slice(0, 2000));
+    console.log(text);
     console.log('──────────────────────────────────────────────────\n');
     return;
   }
@@ -38,7 +39,14 @@ export async function sendConfirmationEmail(i: ConfirmEmailInput): Promise<void>
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from, to: [i.to], subject, html })
+    body: JSON.stringify({
+      from,
+      to: [i.to],
+      subject,
+      html,
+      text,
+      reply_to: EVENT.contactEmail
+    })
   });
   if (!res.ok) {
     const body = await res.text().catch(() => '');
@@ -89,6 +97,36 @@ function renderHtml(i: ConfirmEmailInput) {
   </table>
 </td></tr></table>
 </body></html>`;
+}
+
+function renderText(i: ConfirmEmailInput) {
+  const positions = i.positions.join(', ');
+  const typeLabel = i.bookingType === 'FULL_KUND' ? 'Full Kund (positions A, B & C)' : `Single Position (${positions})`;
+  const donationLines = i.donationPence && i.donationPence > 0
+    ? `\nDonation:      ${formatGBP(i.donationPence)} (to Unity in Divinity charity)\nTotal paid:    ${formatGBP(i.amountPence + i.donationPence)}\n`
+    : '';
+  return `Namaste ${i.primaryName},
+
+Your booking for ${EVENT.name} is confirmed.
+
+Reference:     ${i.reference}
+Yagna:         ${i.yagnaType}
+Date:          ${formatDateLong(i.date)}
+Time:          ${formatTime(i.startTime)}
+Kund:          Kund ${i.kundNumber}
+Position:      ${typeLabel}
+Seva amount:   ${formatGBP(i.amountPence)}${donationLines}
+Venue:         ${EVENT.venueName}, ${EVENT.venueAddress}
+
+Please arrive 20 minutes before your session and bring this email
+(printed or on your phone). Modest, comfortable clothing is recommended.
+
+If you need to update your booking, reply to this email or contact us at
+${EVENT.contactEmail}.
+
+With devotion,
+The ${EVENT.organizer} team
+`;
 }
 
 function escapeHtml(s: string) {
