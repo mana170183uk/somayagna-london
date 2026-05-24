@@ -13,7 +13,7 @@ interface CreateCheckoutArgs {
   holdId: string;
   amountPence: number;
   donationPence?: number;
-  email: string;
+  email?: string;       // optional - Stripe collects on checkout page if omitted
   description: string;
   successUrl: string;
   cancelUrl: string;
@@ -41,7 +41,7 @@ export async function createStripeCheckoutSession(a: CreateCheckoutArgs) {
   }
   return stripe.checkout.sessions.create({
     mode: 'payment',
-    customer_email: a.email,
+    ...(a.email ? { customer_email: a.email } : {}),
     line_items: lineItems,
     metadata: { holdId: a.holdId, donationPence: String(a.donationPence ?? 0) },
     payment_intent_data: { metadata: { holdId: a.holdId, donationPence: String(a.donationPence ?? 0) } },
