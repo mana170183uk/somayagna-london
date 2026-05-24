@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { classNames } from '@/lib/utils';
 
 interface BookingLite {
-  id: string; reference: string; primaryName: string; email: string; phone: string;
+  id: string; reference: string; primaryName: string; email: string | null; phone: string;
   bookingType: 'SINGLE_POSITION' | 'FULL_KUND'; status: string; amountPence: number;
   paymentStatus: string | null; paymentProvider: string | null;
 }
@@ -58,7 +58,7 @@ export default function AdminSessionPanel({ sessionId, kunds }: { sessionId: str
                     {p.booking ? (
                       <div className="mt-1">
                         <div className="text-maroon-900">{p.booking.primaryName}</div>
-                        <div className="text-xs text-maroon-700/90">{p.booking.email}</div>
+                        <div className="text-xs text-maroon-700/90">{p.booking.email ?? '(no email)'}</div>
                         <div className="text-xs text-maroon-700/90">{p.booking.reference} · {gbp(p.booking.amountPence)} · {p.booking.paymentStatus ?? '—'}</div>
                         <div className="mt-2 flex gap-2">
                           <button className="btn-ghost !py-1 !px-2 !text-xs" onClick={() => setEditing(p.booking!)}>Edit</button>
@@ -146,7 +146,7 @@ function ManualAddModal({ sessionId, kundNumber, positions, onClose, onSaved }: 
 }
 
 function EditModal({ booking, onClose, onSaved }: { booking: BookingLite; onClose: () => void; onSaved: () => void }) {
-  const [form, setForm] = useState({ primaryName: booking.primaryName, email: booking.email, phone: booking.phone });
+  const [form, setForm] = useState({ primaryName: booking.primaryName, email: booking.email ?? '', phone: booking.phone });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   async function save(e: React.FormEvent) {
