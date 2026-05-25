@@ -95,14 +95,16 @@ model KundPosition {
   kund       Kund       @relation(fields: [kundId], references: [id], onDelete: Cascade)
   label      String     // "A" | "B" | "C"
 
-  bookingId  String?    @unique          // confirmed owner (NULL if free)
+  bookingId  String?                     // confirmed owner (NULL if free). NOT unique: a Full Kund booking owns 3 positions
   booking    Booking?   @relation("ConfirmedPositions", fields: [bookingId], references: [id], onDelete: SetNull)
 
-  holdId     String?    @unique          // active hold (NULL if free)
+  holdId     String?                     // active hold (NULL if free). NOT unique: a Full Kund hold owns 3 positions
   hold       BookingHold? @relation("HeldPositions", fields: [holdId], references: [id], onDelete: SetNull)
 
   @@unique([kundId, label])
   @@index([kundId])
+  @@index([holdId])
+  @@index([bookingId])
 }
 
 // A short-lived (10 min) reservation while the user completes payment.
