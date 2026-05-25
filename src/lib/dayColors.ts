@@ -36,3 +36,32 @@ export function paletteForDate(date: Date | string): DayPalette {
   const iso = typeof date === 'string' ? date.slice(0, 10) : date.toISOString().slice(0, 10);
   return PALETTES[iso] ?? DEFAULT_PALETTE;
 }
+
+/* ─────────────────────────  SESSION PALETTES  ─────────────────────────
+ * Each of the three daily sessions gets a cool-tone palette that won't
+ * clash with the warm day palette above. Sequence reflects the
+ * progression of the day: dawn → midday → dusk.
+ */
+
+export interface SessionPalette {
+  bg: string;
+  border: string;
+  ring: string;
+  accentText: string;
+  swatch: string;
+  name: string;
+  icon: 'sunrise' | 'midday' | 'sunset';
+  label: string;        // human-friendly time-of-day label
+}
+
+const SESSION_PALETTES: Record<string, SessionPalette> = {
+  '10:15': { bg: 'bg-sky-100',    border: 'border-sky-400',    ring: 'ring-sky-400',    accentText: 'text-sky-800',    swatch: '#E0F2FE', name: 'Sky',     icon: 'sunrise', label: 'Morning' },
+  '14:15': { bg: 'bg-teal-100',   border: 'border-teal-400',   ring: 'ring-teal-400',   accentText: 'text-teal-800',   swatch: '#CCFBF1', name: 'Teal',    icon: 'midday',  label: 'Afternoon I' },
+  '16:15': { bg: 'bg-indigo-100', border: 'border-indigo-400', ring: 'ring-indigo-400', accentText: 'text-indigo-800', swatch: '#E0E7FF', name: 'Indigo',  icon: 'sunset',  label: 'Afternoon II' }
+};
+
+const DEFAULT_SESSION_PALETTE = SESSION_PALETTES['10:15'];
+
+export function paletteForSession(startTime: string): SessionPalette {
+  return SESSION_PALETTES[startTime] ?? DEFAULT_SESSION_PALETTE;
+}

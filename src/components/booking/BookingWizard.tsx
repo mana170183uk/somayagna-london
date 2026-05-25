@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { classNames } from '@/lib/utils';
 import KundMandala from './KundMandala';
 import KundVenuePlan from './KundVenuePlan';
-import { paletteForDate } from '@/lib/dayColors';
+import { paletteForDate, paletteForSession } from '@/lib/dayColors';
+import { SessionIcon } from '@/components/ui/SessionIcon';
 
 interface SessionLite { id: string; startTime: string; label: string; }
 interface DayLite {
@@ -214,6 +215,7 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
                     selectedPositions={positions}
                     dateLabel={formatDate(selectedDay.date)}
                     timeLabel={formatTime(selectedSession.startTime)}
+                    startTime={selectedSession.startTime}
                     yagnaTitle={selectedDay.title}
                     onSelect={(k, ps) => { setKundNumber(k); setPositions(ps); }}
                   />
@@ -225,6 +227,7 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
                     selectedPositions={positions}
                     dateLabel={formatDate(selectedDay.date)}
                     timeLabel={formatTime(selectedSession.startTime)}
+                    startTime={selectedSession.startTime}
                     yagnaTitle={selectedDay.title}
                     onSelect={(k, ps) => { setKundNumber(k); setPositions(ps); }}
                   />
@@ -417,21 +420,34 @@ function DateGrid({ days, value, onChange }: { days: DayLite[]; value: string | 
 function SessionGrid({ sessions, value, onChange }: { sessions: SessionLite[]; value: string | null; onChange: (id: string) => void }) {
   return (
     <div className="grid sm:grid-cols-3 gap-3">
-      {sessions.map((s) => (
-        <button
-          key={s.id} type="button" onClick={() => onChange(s.id)}
-          className={classNames(
-            'rounded-2xl p-5 border transition text-left',
-            value === s.id
-              ? 'bg-saffron-500 text-ivory-50 border-saffron-500 shadow-soft-gold'
-              : 'bg-ivory-50 border-gold-300/50 hover:border-saffron-400'
-          )}
-        >
-          <div className="text-xs uppercase tracking-widest opacity-80">{s.label}</div>
-          <div className="h-display text-3xl mt-1">{formatTime(s.startTime)}</div>
-          <div className="text-xs mt-1 opacity-70">11 Kunds · 33 seats</div>
-        </button>
-      ))}
+      {sessions.map((s) => {
+        const palette = paletteForSession(s.startTime);
+        const isSelected = value === s.id;
+        return (
+          <button
+            key={s.id} type="button" onClick={() => onChange(s.id)}
+            className={classNames(
+              'relative rounded-2xl p-5 border-2 text-left transition overflow-hidden',
+              isSelected
+                ? `${palette.bg} ${palette.border} ring-4 ${palette.ring} shadow-soft-gold scale-[1.02]`
+                : `${palette.bg} ${palette.border} hover:-translate-y-0.5 hover:shadow-soft-gold`
+            )}
+          >
+            {/* Top accent stripe */}
+            <span className={classNames('absolute top-0 left-0 right-0 h-1.5', palette.border.replace('border-', 'bg-'))} />
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className={classNames('text-xs uppercase tracking-widest font-semibold', palette.accentText)}>{s.label}</div>
+                <div className="h-display text-3xl mt-1 text-maroon-900">{formatTime(s.startTime)}</div>
+                <div className="text-xs mt-1 text-maroon-700">11 Kunds · 33 seats</div>
+              </div>
+              <span className={palette.accentText}>
+                <SessionIcon kind={palette.icon} className="w-7 h-7" />
+              </span>
+            </div>
+          </button>
+        );
+      })}
     </div>
   );
 }

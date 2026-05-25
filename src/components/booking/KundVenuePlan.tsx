@@ -1,6 +1,8 @@
 'use client';
 
 import { classNames } from '@/lib/utils';
+import { paletteForSession } from '@/lib/dayColors';
+import { SessionIcon } from '@/components/ui/SessionIcon';
 
 interface PositionView { id: string; label: 'A' | 'B' | 'C'; state: 'FREE' | 'HELD' | 'BOOKED'; }
 interface KundView { id: string; number: number; positions: PositionView[]; fullyFree: boolean; }
@@ -16,6 +18,7 @@ interface Props {
   selectedPositions: ('A' | 'B' | 'C')[];
   dateLabel: string;
   timeLabel: string;
+  startTime: string;     // raw "10:15" — used to colour the session
   yagnaTitle: string;
   onSelect: (kund: number, positions: ('A' | 'B' | 'C')[]) => void;
 }
@@ -30,20 +33,27 @@ const RIGHT_GRID_ORDER = [10, 11, 8, 9, 6, 7, 4, 5, 3, 2];
 
 export default function KundVenuePlan({
   availability, bookingType, selectedKund, selectedPositions,
-  dateLabel, timeLabel, yagnaTitle, onSelect
+  dateLabel, timeLabel, startTime, yagnaTitle, onSelect
 }: Props) {
   const byNumber = new Map(availability.kunds.map((k) => [k.number, k]));
   const kund1 = byNumber.get(1);
+  const session = paletteForSession(startTime);
 
   return (
     <div>
       {/* Header */}
       <div className="text-center pb-5">
         <p className="eyebrow justify-center mb-2">{yagnaTitle}</p>
-        <h3 className="h-display text-2xl md:text-3xl text-maroon-800">
-          {dateLabel} · <span className="text-saffron-700">{timeLabel}</span>
-        </h3>
-        <p className="text-sm text-maroon-900/85 mt-1">
+        <h3 className="h-display text-2xl md:text-3xl text-maroon-800">{dateLabel}</h3>
+        <div className={classNames(
+          'inline-flex items-center gap-2 mt-3 px-4 py-1.5 rounded-full border-2',
+          session.bg, session.border, session.accentText
+        )}>
+          <SessionIcon kind={session.icon} className="w-5 h-5" />
+          <span className="text-sm font-semibold uppercase tracking-widest">{session.label}</span>
+          <span className="h-display text-lg">{timeLabel}</span>
+        </div>
+        <p className="text-sm text-maroon-900/85 mt-3">
           Venue plan view · {availability.remaining} of {availability.capacity} seats remain
         </p>
       </div>

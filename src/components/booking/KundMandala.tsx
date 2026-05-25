@@ -3,6 +3,8 @@
 import KundIllustration from './KundIllustration';
 import { Mandala } from '@/components/ui/Ornaments';
 import { classNames } from '@/lib/utils';
+import { paletteForSession } from '@/lib/dayColors';
+import { SessionIcon } from '@/components/ui/SessionIcon';
 
 interface PositionView { id: string; label: 'A' | 'B' | 'C'; state: 'FREE' | 'HELD' | 'BOOKED'; }
 interface KundView { id: string; number: number; positions: PositionView[]; fullyFree: boolean; }
@@ -18,6 +20,7 @@ interface Props {
   selectedPositions: ('A' | 'B' | 'C')[];
   dateLabel: string;
   timeLabel: string;
+  startTime: string;
   yagnaTitle: string;
   onSelect: (kund: number, positions: ('A' | 'B' | 'C')[]) => void;
 }
@@ -29,21 +32,29 @@ export default function KundMandala({
   selectedPositions,
   dateLabel,
   timeLabel,
+  startTime,
   yagnaTitle,
   onSelect
 }: Props) {
   const sorted = [...availability.kunds].sort((a, b) => a.number - b.number);
   const center = sorted.find((k) => k.number === 1);
   const outer = sorted.filter((k) => k.number !== 1);
+  const session = paletteForSession(startTime);
 
   return (
     <div>
       {/* Header: yagna + date + time */}
       <div className="text-center pb-6">
         <p className="eyebrow justify-center mb-2">{yagnaTitle}</p>
-        <h3 className="h-display text-2xl md:text-3xl text-maroon-800">
-          {dateLabel} · <span className="text-saffron-700">{timeLabel}</span>
-        </h3>
+        <h3 className="h-display text-2xl md:text-3xl text-maroon-800">{dateLabel}</h3>
+        <div className={classNames(
+          'inline-flex items-center gap-2 mt-3 px-4 py-1.5 rounded-full border-2',
+          session.bg, session.border, session.accentText
+        )}>
+          <SessionIcon kind={session.icon} className="w-5 h-5" />
+          <span className="text-sm font-semibold uppercase tracking-widest">{session.label}</span>
+          <span className="h-display text-lg">{timeLabel}</span>
+        </div>
         <p className="text-sm text-maroon-900/85 mt-1">
           {availability.remaining} of {availability.capacity} seats remain
           {bookingType === 'FULL_KUND' ? ' · choose a Kund with all positions free' : ' · click any free position (A · B · C)'}

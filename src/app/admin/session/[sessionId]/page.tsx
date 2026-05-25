@@ -4,7 +4,8 @@ import { prisma } from '@/lib/prisma';
 import { getAdminFromCookies } from '@/lib/auth';
 import { formatDateLong, formatGBP, formatTime, SESSION_CAPACITY } from '@/lib/constants';
 import AdminSessionPanel from '@/components/admin/AdminSessionPanel';
-import { paletteForDate } from '@/lib/dayColors';
+import { paletteForDate, paletteForSession } from '@/lib/dayColors';
+import { SessionIcon } from '@/components/ui/SessionIcon';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,17 +32,23 @@ export default async function SessionDetail({ params }: { params: Promise<{ sess
   if (!session) notFound();
 
   const taken = session.kunds.reduce((acc, k) => acc + k.positions.filter((p) => p.bookingId).length, 0);
-  const palette = paletteForDate(session.eventDay.date);
+  const dayPalette = paletteForDate(session.eventDay.date);
+  const sessionPalette = paletteForSession(session.startTime);
 
   return (
     <div>
       <Link href="/admin" className="btn-ghost text-sm">← All days</Link>
-      <header className={`mt-2 rounded-2xl border-l-4 px-5 py-4 ${palette.bg} ${palette.border}`}>
-        <p className={`eyebrow mb-2 ${palette.accentText}`}>{session.eventDay.yagnaType.replace('_', ' ')}</p>
+      <header className={`mt-2 rounded-2xl border-l-4 px-5 py-4 ${dayPalette.bg} ${dayPalette.border}`}>
+        <p className={`eyebrow mb-2 ${dayPalette.accentText}`}>{session.eventDay.yagnaType.replace('_', ' ')}</p>
         <h1 className="h-display text-3xl text-maroon-800">
-          {formatDateLong(session.eventDay.date)} — {formatTime(session.startTime)}
+          {formatDateLong(session.eventDay.date)}
         </h1>
-        <p className="text-sm text-maroon-700 mt-1">
+        <div className={`inline-flex items-center gap-2 mt-3 px-4 py-1.5 rounded-full border-2 ${sessionPalette.bg} ${sessionPalette.border} ${sessionPalette.accentText}`}>
+          <SessionIcon kind={sessionPalette.icon} className="w-5 h-5" />
+          <span className="text-sm font-semibold uppercase tracking-widest">{sessionPalette.label}</span>
+          <span className="h-display text-lg">{formatTime(session.startTime)}</span>
+        </div>
+        <p className="text-sm text-maroon-700 mt-3">
           {taken}/{SESSION_CAPACITY} positions taken · {SESSION_CAPACITY - taken} remaining
         </p>
       </header>

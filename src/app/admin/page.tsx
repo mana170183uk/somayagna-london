@@ -4,7 +4,8 @@ import { prisma } from '@/lib/prisma';
 import { getAdminFromCookies } from '@/lib/auth';
 import { formatDateLong, formatGBP, formatTime, SESSION_CAPACITY } from '@/lib/constants';
 import { Mandala } from '@/components/ui/Ornaments';
-import { paletteForDate } from '@/lib/dayColors';
+import { paletteForDate, paletteForSession } from '@/lib/dayColors';
+import { SessionIcon } from '@/components/ui/SessionIcon';
 
 export const dynamic = 'force-dynamic';
 
@@ -191,13 +192,24 @@ export default async function AdminHome() {
                   const revenue = s.bookings.reduce((acc, b) => acc + b.amountPence, 0);
                   const donations = s.bookings.reduce((acc, b) => acc + b.donationPence, 0);
                   const sPct = Math.round((taken / SESSION_CAPACITY) * 100);
+                  const sPalette = paletteForSession(s.startTime);
                   return (
                     <Link
                       key={s.id} href={`/admin/session/${s.id}`}
-                      className="grid grid-cols-12 gap-3 items-center px-5 py-4 hover:bg-ivory-100 transition group"
+                      className="relative grid grid-cols-12 gap-3 items-center px-5 py-4 hover:bg-ivory-100 transition group"
                     >
-                      <div className="col-span-2 h-display text-xl text-maroon-800 group-hover:text-saffron-700 transition">{formatTime(s.startTime)}</div>
-                      <div className="col-span-3 text-sm text-maroon-900">
+                      {/* Session palette stripe on the left edge */}
+                      <span className={`absolute left-0 top-0 bottom-0 w-1 ${sPalette.border.replace('border-', 'bg-')}`} />
+                      <div className="col-span-3 flex items-center gap-2.5">
+                        <span className={`inline-flex items-center justify-center w-9 h-9 rounded-full ${sPalette.bg} ${sPalette.accentText}`}>
+                          <SessionIcon kind={sPalette.icon} className="w-5 h-5" />
+                        </span>
+                        <div>
+                          <div className={`text-[10px] uppercase tracking-widest font-semibold ${sPalette.accentText}`}>{sPalette.label}</div>
+                          <div className="h-display text-lg text-maroon-800 group-hover:text-saffron-700 transition leading-none">{formatTime(s.startTime)}</div>
+                        </div>
+                      </div>
+                      <div className="col-span-2 text-sm text-maroon-900">
                         <div className="font-medium text-maroon-800">{taken}<span className="text-maroon-700/80">/{SESSION_CAPACITY}</span> taken</div>
                         <div className="text-xs text-maroon-700">{remaining} free</div>
                       </div>
