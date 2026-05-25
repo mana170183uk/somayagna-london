@@ -86,9 +86,12 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
       setLoadingAvail(true);
       try {
         const r = await fetch(`/api/sessions/${sessionId}`);
-        if (!r.ok) throw new Error('Failed to load availability');
+        if (!r.ok) {
+          const j = await r.json().catch(() => ({} as any));
+          throw new Error(j.message || j.error || `Availability load failed (${r.status})`);
+        }
         const data = (await r.json()) as Availability;
-        if (alive) setAvailability(data);
+        if (alive) { setAvailability(data); setError(null); }
       } catch (e: any) { if (alive) setError(e.message); }
       finally { if (alive) setLoadingAvail(false); }
     };
@@ -204,6 +207,19 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
             subtitle={availability ? `${availability.remaining} of ${availability.capacity} seats available` : 'Loading availability…'}
           >
             {loadingAvail && <div className="text-maroon-700/90 text-sm py-6">Loading availability…</div>}
+            {!loadingAvail && !availability && error && (
+              <div role="alert" className="my-4 rounded-lg border border-maroon-300 bg-maroon-50 text-maroon-800 px-4 py-3 text-sm">
+                <div className="font-medium mb-1">Couldn't load seats for this session.</div>
+                <div className="text-xs">{error}</div>
+                <button
+                  type="button"
+                  className="btn-ghost !py-1 !px-3 !text-xs mt-2"
+                  onClick={() => { const id = sessionId; setSessionId(null); setTimeout(() => setSessionId(id), 50); }}
+                >
+                  Try again
+                </button>
+              </div>
+            )}
             {availability && selectedDay && selectedSession && (
               <>
                 <LayoutToggle value={layoutMode} onChange={setLayoutMode} />
