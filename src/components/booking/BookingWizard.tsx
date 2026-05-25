@@ -599,26 +599,38 @@ function DonationSection({
             />
           </div>
 
-          {/* Gift Aid — UK only, increases donation by 25% from HMRC */}
-          <div className="mt-5 pt-4 border-t border-saffron-300/40">
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={!!registration.giftAid}
-                onChange={(e) => setRegistration({ ...registration, giftAid: e.target.checked })}
-                className="mt-1 w-5 h-5 accent-saffron-600 cursor-pointer"
-              />
-              <div className="flex-1">
-                <div className="font-medium text-maroon-800">Yes, claim Gift Aid (+25% from HMRC)</div>
-                <div className="text-xs text-maroon-900/90 mt-0.5 leading-relaxed">
-                  I confirm that I am a UK taxpayer and I understand that if I pay less Income Tax
-                  and/or Capital Gains Tax than the amount of Gift Aid claimed on all my donations
-                  in that tax year, it is my responsibility to pay any difference. The charity will
-                  use the address you provided above to submit the Gift Aid claim to HMRC.
+          {/* Gift Aid — live +25% calculator + prominent treatment */}
+          {pence > 0 && (
+            <div className="mt-5 rounded-xl bg-gradient-to-br from-gold-100 via-saffron-50 to-ivory-50 border-2 border-gold-400/60 p-4 shadow-soft-gold">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!!registration.giftAid}
+                  onChange={(e) => setRegistration({ ...registration, giftAid: e.target.checked })}
+                  className="mt-1 w-5 h-5 accent-saffron-600 cursor-pointer"
+                />
+                <div className="flex-1">
+                  <div className="flex items-baseline justify-between gap-3 flex-wrap">
+                    <div className="font-semibold text-maroon-800 flex items-center gap-2">
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-saffron-500 text-ivory-50 text-xs font-bold">+25%</span>
+                      Boost my donation with Gift Aid
+                    </div>
+                    <div className="text-right tabular-nums">
+                      <span className="text-xs text-maroon-700">Your £{(pence / 100).toFixed(2)} becomes</span>
+                      <span className="ml-2 h-display text-xl text-saffron-700">£{((pence * 1.25) / 100).toFixed(2)}</span>
+                    </div>
+                  </div>
+                  <div className="text-xs text-maroon-900/90 mt-2 leading-relaxed">
+                    UK taxpayers only — the charity claims an extra <strong>£{((pence * 0.25) / 100).toFixed(2)}</strong> from
+                    HMRC at no extra cost to you. By ticking, I confirm I am a UK taxpayer and that
+                    if I pay less Income/Capital Gains Tax in this tax year than the amount of Gift
+                    Aid claimed on all my donations, I will pay the difference. The charity will use
+                    the address you provided above to submit the claim.
+                  </div>
                 </div>
-              </div>
-            </label>
-          </div>
+              </label>
+            </div>
+          )}
         </div>
       )}
     </div>
