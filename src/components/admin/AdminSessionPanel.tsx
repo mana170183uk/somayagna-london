@@ -9,7 +9,10 @@ interface BookingLite {
   bookingType: 'SINGLE_POSITION' | 'FULL_KUND'; status: string; amountPence: number;
   paymentStatus: string | null; paymentProvider: string | null;
 }
-interface PositionLite { id: string; label: 'A' | 'B' | 'C'; booking: BookingLite | null; }
+interface PositionLite {
+  id: string; label: 'A' | 'B' | 'C'; booking: BookingLite | null;
+  blocked: boolean; blockReason: string | null; blockedBy: string | null;
+}
 interface KundLite { id: string; number: number; positions: PositionLite[]; }
 
 const gbp = (p: number) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(p / 100);
@@ -30,13 +33,36 @@ export default function AdminSessionPanel({ sessionId, kunds }: { sessionId: str
     router.refresh();
   }
 
+  async function setBlocked(positionIds: string[], block: boolean, reasonPrompt = true) {
+    let reason: string | undefined;
+    if (block && reasonPrompt) {
+      reason = window.prompt('Reason for blocking (visible only to admins):', 'VIP reserved') ?? undefined;
+      if (reason === undefined) return; // cancelled
+    }
+    setBusy(true); setErr(null);
+    const r = await fetch('/api/admin/positions/block', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ positionIds, block, reason })
+    });
+    setBusy(false);
+    if (!r.ok) {
+      const j = await r.json().catch(() => ({}));
+      setErr(j.message || j.error || `Could not ${block ? 'block' : 'unblock'}.`);
+      return;
+    }
+    router.refresh();
+  }
+
   return (
     <div className="mt-6 space-y-6">
       {err && <div role="alert" className="rounded-lg border border-maroon-300 bg-maroon-50 text-maroon-800 px-4 py-3 text-sm">{err}</div>}
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
         {kunds.map((k) => {
-          const allFree = k.positions.every((p) => !p.booking);
+          const allFree = k.positions.every((p) => !p.booking && !p.blocked);
+          const allUnblockable = k.positions.every((p) => !p.booking);
+          const allBlocked = k.positions.every((p) => p.blocked);
           return (
             <div key={k.id} className="card p-4">
               <div className="flex justify-between items-center">
@@ -47,12 +73,17 @@ export default function AdminSessionPanel({ sessionId, kunds }: { sessionId: str
                 {k.positions.map((p) => (
                   <li key={p.id} className={classNames(
                     'rounded-md border px-3 py-2 text-sm',
-                    p.booking ? 'border-maroon-200 bg-ivory-100' : 'border-gold-300/50'
+                    p.booking ? 'border-maroon-200 bg-ivory-100' :
+                    p.blocked ? 'border-slate-400 bg-slate-100' : 'border-gold-300/50'
                   )}>
                     <div className="flex justify-between items-baseline">
                       <span className="h-display text-base text-maroon-800">Position {p.label}</span>
                       {p.booking ? (
                         <span className="text-[10px] uppercase tracking-widest text-saffron-700">{p.booking.bookingType === 'FULL_KUND' ? 'Full Kund' : 'Single'}</span>
+                      ) : p.blocked ? (
+                        <span className="text-[10px] uppercase tracking-widest text-slate-700 flex items-center gap-1">
+                          🔒 Blocked
+                        </span>
                       ) : <span className="text-xs text-maroon-700/85">Free</span>}
                     </div>
                     {p.booking ? (
@@ -65,12 +96,28 @@ export default function AdminSessionPanel({ sessionId, kunds }: { sessionId: str
                           <button disabled={busy} className="btn-ghost !py-1 !px-2 !text-xs text-maroon-700" onClick={() => cancel(p.booking!.id)}>Cancel</button>
                         </div>
                       </div>
-                    ) : null}
+                    ) : p.blocked ? (
+                      <div className="mt-1">
+                        <div className="text-xs text-slate-700">{p.blockReason ?? 'Reserved'}</div>
+                        {p.blockedBy && <div className="text-[11px] text-slate-600">by {p.blockedBy}</div>}
+                        <button
+                          disabled={busy}
+                          className="btn-ghost !py-1 !px-2 !text-xs text-slate-700 mt-2"
+                          onClick={() => setBlocked([p.id], false, false)}
+                        >Unblock</button>
+                      </div>
+                    ) : (
+                      <button
+                        disabled={busy}
+                        className="btn-ghost !py-1 !px-2 !text-xs text-slate-600 mt-2"
+                        onClick={() => setBlocked([p.id], true)}
+                      >🔒 Block</button>
+                    )}
                   </li>
                 ))}
               </ul>
-              <div className="mt-3 flex gap-2">
-                {k.positions.filter((p) => !p.booking).map((p) => (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {k.positions.filter((p) => !p.booking && !p.blocked).map((p) => (
                   <button key={p.id} className="btn-ghost !py-1 !px-3 !text-xs"
                           onClick={() => setAdding({ kund: k.number, positions: [p.label] })}>
                     + {p.label}
@@ -80,6 +127,18 @@ export default function AdminSessionPanel({ sessionId, kunds }: { sessionId: str
                   <button className="btn-ghost !py-1 !px-3 !text-xs text-saffron-700"
                           onClick={() => setAdding({ kund: k.number, positions: ['A','B','C'] })}>
                     + Full Kund
+                  </button>
+                )}
+                {allUnblockable && !allBlocked && (
+                  <button disabled={busy} className="btn-ghost !py-1 !px-3 !text-xs text-slate-700"
+                          onClick={() => setBlocked(k.positions.filter((p) => !p.blocked).map((p) => p.id), true)}>
+                    🔒 Block whole Kund
+                  </button>
+                )}
+                {allBlocked && (
+                  <button disabled={busy} className="btn-ghost !py-1 !px-3 !text-xs text-slate-700"
+                          onClick={() => setBlocked(k.positions.map((p) => p.id), false, false)}>
+                    Unblock whole Kund
                   </button>
                 )}
               </div>

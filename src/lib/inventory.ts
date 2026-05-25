@@ -19,13 +19,14 @@ import { prisma } from './prisma';
 import { HOLD_MS, POSITION_LABELS, PRICE_FULL_KUND_PENCE, PRICE_SINGLE_PENCE, PositionLabel, SESSION_CAPACITY } from './constants';
 import { bookingReference } from './utils';
 
-export type PositionState = 'FREE' | 'HELD' | 'BOOKED';
+export type PositionState = 'FREE' | 'HELD' | 'BOOKED' | 'BLOCKED';
 export interface PositionView {
   id: string;
   label: PositionLabel;
   state: PositionState;
   bookingRef?: string;
   bookedBy?: string;
+  blockReason?: string;
 }
 export interface KundView {
   id: string;
@@ -72,13 +73,15 @@ export async function getSessionAvailability(sessionId: string): Promise<Session
       let state: PositionState = 'FREE';
       if (p.bookingId) state = 'BOOKED';
       else if (p.holdId) state = 'HELD';
+      else if (p.blocked) state = 'BLOCKED';
       if (state === 'FREE') remaining++;
       return {
         id: p.id,
         label: p.label as PositionLabel,
         state,
         bookingRef: p.booking?.reference,
-        bookedBy: p.booking?.primaryName
+        bookedBy: p.booking?.primaryName,
+        blockReason: p.blocked ? (p.blockReason ?? 'Reserved') : undefined
       };
     });
     return {
@@ -145,12 +148,12 @@ export async function createHold(args: CreateHoldArgs) {
       throw new InventoryError('INVALID_REQUEST', 'Some positions do not exist.');
     }
 
-    const takenList = targetPositions.filter((p) => p.bookingId || p.holdId);
+    const takenList = targetPositions.filter((p) => p.bookingId || p.holdId || p.blocked);
     if (args.bookingType === 'FULL_KUND' && takenList.length > 0) {
       throw new InventoryError('FULL_KUND_UNAVAILABLE', 'Full Kund booking is only available when all three positions are free.');
     }
     if (takenList.length > 0) {
-      throw new InventoryError('POSITIONS_TAKEN', `Positions already taken: ${takenList.map((p) => p.label).join(', ')}.`);
+      throw new InventoryError('POSITIONS_TAKEN', `Positions unavailable: ${takenList.map((p) => p.label).join(', ')}.`);
     }
 
     const amountPence = args.bookingType === 'FULL_KUND' ? PRICE_FULL_KUND_PENCE : PRICE_SINGLE_PENCE * positions.length;
@@ -173,7 +176,8 @@ export async function createHold(args: CreateHoldArgs) {
       where: {
         id: { in: targetPositions.map((p) => p.id) },
         bookingId: null,
-        holdId: null
+        holdId: null,
+        blocked: false
       },
       data: { holdId: hold.id }
     });
@@ -326,8 +330,8 @@ export async function adminCreateConfirmedBooking(args: AdminCreateArgs) {
     });
     if (!kund) throw new InventoryError('INVALID_REQUEST', `Kund ${args.kundNumber} not found.`);
     const targets = kund.positions.filter((p) => positions.includes(p.label as PositionLabel));
-    const taken = targets.filter((p) => p.bookingId || p.holdId);
-    if (taken.length > 0) throw new InventoryError('POSITIONS_TAKEN', `Already taken: ${taken.map((t) => t.label).join(', ')}`);
+    const taken = targets.filter((p) => p.bookingId || p.holdId || p.blocked);
+    if (taken.length > 0) throw new InventoryError('POSITIONS_TAKEN', `Unavailable: ${taken.map((t) => t.label).join(', ')}`);
 
     const booking = await tx.booking.create({
       data: {

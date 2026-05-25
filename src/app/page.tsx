@@ -91,6 +91,7 @@ function Hero() {
         <div className="mt-6 flex flex-wrap gap-3">
           <span className="rounded-full border border-gold-300/40 px-4 py-1.5 text-xs tracking-wider uppercase text-gold-200">Purshotam Yagna</span>
           <span className="rounded-full border border-gold-300/40 px-4 py-1.5 text-xs tracking-wider uppercase text-gold-200">Vishnu Gopal Maha Yagna</span>
+          <span className="rounded-full border border-gold-300/40 px-4 py-1.5 text-xs tracking-wider uppercase text-gold-200">Pitru Yagna</span>
           <span className="rounded-full border border-gold-300/40 px-4 py-1.5 text-xs tracking-wider uppercase text-gold-200">11 Kunds · 33 seats / session</span>
         </div>
 
@@ -159,14 +160,14 @@ function SpiritualIntro() {
 /* ─────────────────────────  TIMELINE ───────────────────────── */
 
 const TIMELINE = [
-  { iso: '2026-06-14', date: '14 Jun', label: 'Programme Welcome', type: 'welcome', desc: 'Inauguration & introduction. Open to all — no booking required.' },
-  { iso: '2026-06-15', date: '15 Jun', label: 'Purshotam Yagna', type: 'purshotam', desc: 'The opening sacred fire ritual. Active booking begins.' },
-  { iso: '2026-06-16', date: '16 Jun', label: 'Vishnu Gopal Yagna', type: 'vishnu', desc: 'Daily yagna invoking Lord Vishnu.' },
-  { iso: '2026-06-17', date: '17 Jun', label: 'Vishnu Gopal Yagna', type: 'vishnu', desc: 'Daily yagna invoking Lord Vishnu.' },
-  { iso: '2026-06-18', date: '18 Jun', label: 'Vishnu Gopal Yagna', type: 'vishnu', desc: 'Daily yagna invoking Lord Vishnu.' },
-  { iso: '2026-06-19', date: '19 Jun', label: 'Vishnu Gopal Yagna', type: 'vishnu', desc: 'Daily yagna invoking Lord Vishnu.' },
-  { iso: '2026-06-20', date: '20 Jun', label: 'Vishnu Gopal Yagna', type: 'vishnu', desc: 'Daily yagna invoking Lord Vishnu.' },
-  { iso: '2026-06-21', date: '21 Jun', label: 'Vishnu Gopal Yagna', type: 'vishnu', desc: 'Concluding day of the programme.' }
+  { iso: '2026-06-14', date: '14 Jun', label: 'Purshotam · Pitru Yagna', type: 'purshotam', desc: 'Programme welcome & opening rites. Purshotam Yagna and Pitru Yagna.' },
+  { iso: '2026-06-15', date: '15 Jun', label: 'Purshotam · Pitru Yagna', type: 'purshotam', desc: 'Active booking begins. Purshotam Yagna and Pitru Yagna throughout the day.' },
+  { iso: '2026-06-16', date: '16 Jun', label: 'Vishnu Gopal · Pitru', type: 'vishnu', desc: 'Daily Vishnu Gopal Yagna alongside Pitru Yagna sessions.' },
+  { iso: '2026-06-17', date: '17 Jun', label: 'Vishnu Gopal · Pitru', type: 'vishnu', desc: 'Daily Vishnu Gopal Yagna alongside Pitru Yagna sessions.' },
+  { iso: '2026-06-18', date: '18 Jun', label: 'Vishnu Gopal · Pitru', type: 'vishnu', desc: 'Daily Vishnu Gopal Yagna alongside Pitru Yagna sessions.' },
+  { iso: '2026-06-19', date: '19 Jun', label: 'Vishnu Gopal · Pitru', type: 'vishnu', desc: 'Daily Vishnu Gopal Yagna alongside Pitru Yagna sessions.' },
+  { iso: '2026-06-20', date: '20 Jun', label: 'Vishnu Gopal · Pitru', type: 'vishnu', desc: 'Extended Saturday programme — five sessions.' },
+  { iso: '2026-06-21', date: '21 Jun', label: 'Vishnu Gopal · Pitru', type: 'vishnu', desc: 'Concluding day, finishes around 15:00.' }
 ];
 
 function Timeline() {

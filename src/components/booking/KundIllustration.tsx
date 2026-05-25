@@ -2,7 +2,7 @@
 
 import { classNames } from '@/lib/utils';
 
-export type PositionState = 'FREE' | 'HELD' | 'BOOKED';
+export type PositionState = 'FREE' | 'HELD' | 'BOOKED' | 'BLOCKED';
 
 export interface KundIllustrationProps {
   number: number;
@@ -183,8 +183,12 @@ export default function KundIllustration({
           const { x, y } = posXY(POS_ANGLES[p.label], posR, cx, cy);
           const isPicked = selected && selectedPositions.includes(p.label);
           const free = p.state === 'FREE';
-          const fill = p.state === 'BOOKED' ? '#561414' : p.state === 'HELD' ? '#FFB85C' : isPicked ? '#E97B11' : '#FFFCF6';
-          const stroke = p.state === 'BOOKED' ? '#2C0A0A' : isPicked ? '#9A480A' : '#9A480A';
+          const fill =
+            p.state === 'BOOKED' ? '#561414' :
+            p.state === 'BLOCKED' ? '#475569' :
+            p.state === 'HELD' ? '#FFB85C' :
+            isPicked ? '#E97B11' : '#FFFCF6';
+          const stroke = p.state === 'BOOKED' ? '#2C0A0A' : p.state === 'BLOCKED' ? '#1E293B' : isPicked ? '#9A480A' : '#9A480A';
           return (
             <g key={p.label}>
               <circle

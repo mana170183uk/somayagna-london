@@ -19,7 +19,13 @@ export const registrationSchema = z.object({
   relation: z.enum(['COUPLE', 'SIBLING', 'INDIVIDUAL']),
   email: z.string().email().optional().or(z.literal('')),
   phone: z.string().min(5).max(40),
-  whatsappNumber: z.string().min(5).max(40),
+  // WhatsApp number: must contain at least 10 digits and only +, digits, spaces, dashes, parens.
+  // Common shapes accepted: +447123456789, 07123 456789, +44 7123 456-789.
+  whatsappNumber: z.string()
+    .min(10, 'WhatsApp number must include at least 10 digits.')
+    .max(20, 'WhatsApp number is too long.')
+    .regex(/^[+0-9\s\-()]+$/, 'WhatsApp number can only contain digits, +, spaces, dashes and parentheses.')
+    .refine((s) => (s.match(/\d/g) ?? []).length >= 10, 'WhatsApp number must include at least 10 digits.'),
   secondParticipantName: z.string().max(120).optional().nullable(),
   addressLine1: z.string().min(1).max(200),
   town: z.string().min(1).max(100),

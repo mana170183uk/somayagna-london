@@ -4,7 +4,7 @@ import { classNames } from '@/lib/utils';
 import { paletteForSession } from '@/lib/dayColors';
 import { SessionIcon } from '@/components/ui/SessionIcon';
 
-interface PositionView { id: string; label: 'A' | 'B' | 'C'; state: 'FREE' | 'HELD' | 'BOOKED'; }
+interface PositionView { id: string; label: 'A' | 'B' | 'C'; state: 'FREE' | 'HELD' | 'BOOKED' | 'BLOCKED'; }
 interface KundView { id: string; number: number; positions: PositionView[]; fullyFree: boolean; }
 interface Availability {
   sessionId: string; date: string; startTime: string;
@@ -276,12 +276,13 @@ function VenueKundTile({
               className={classNames(
                 'aspect-square rounded text-[10px] font-semibold border flex items-center justify-center transition',
                 p.state === 'BOOKED' && 'bg-maroon-700 text-ivory-50 border-maroon-800 cursor-not-allowed',
+                p.state === 'BLOCKED' && 'bg-slate-600 text-slate-100 border-slate-700 cursor-not-allowed',
                 p.state === 'HELD' && 'bg-saffron-200 text-saffron-900 border-saffron-400 cursor-not-allowed',
                 p.state === 'FREE' && !isPicked && !fullKundDisabled && 'bg-ivory-50 text-maroon-800 border-gold-400/50 hover:border-saffron-500 hover:bg-saffron-50',
                 isPicked && 'bg-saffron-500 text-ivory-50 border-saffron-700 shadow-soft-gold'
               )}
             >
-              {p.state === 'HELD' ? '◷' : p.label}
+              {p.state === 'HELD' ? '◷' : p.state === 'BLOCKED' ? '🔒' : p.label}
             </button>
           );
         })}
@@ -367,7 +368,7 @@ function Kund1Panel({
                     isPicked && 'bg-saffron-500 text-ivory-50 border-saffron-700 shadow-soft-gold'
                   )}
                 >
-                  {p.state === 'HELD' ? '◷' : p.label}
+                  {p.state === 'HELD' ? '◷' : p.state === 'BLOCKED' ? '🔒' : p.label}
                 </button>
               );
             })}

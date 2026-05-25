@@ -59,6 +59,9 @@ export default async function SessionDetail({ params }: { params: Promise<{ sess
           id: k.id, number: k.number,
           positions: k.positions.map((p) => ({
             id: p.id, label: p.label as 'A'|'B'|'C',
+            blocked: p.blocked,
+            blockReason: p.blockReason,
+            blockedBy: p.blockedBy,
             booking: p.booking ? {
               id: p.booking.id, reference: p.booking.reference,
               primaryName: p.booking.primaryName, email: p.booking.email,

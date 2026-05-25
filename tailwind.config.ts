@@ -3,8 +3,8 @@ import type { Config } from 'tailwindcss';
 // Per-day palette classes built dynamically in src/lib/dayColors.ts.
 // Some are constructed at runtime (e.g. .replace('border-', 'bg-'))
 // so JIT can't statically detect them — safelist explicitly.
-const DAY_COLOR_HUES = ['amber', 'rose', 'orange', 'emerald', 'violet', 'yellow', 'pink', 'sky', 'teal', 'indigo'] as const;
-const DAY_COLOR_INTENSITIES = ['100', '300', '400', '800'] as const;
+const DAY_COLOR_HUES = ['amber', 'rose', 'orange', 'emerald', 'violet', 'yellow', 'pink', 'sky', 'teal', 'indigo', 'slate'] as const;
+const DAY_COLOR_INTENSITIES = ['100', '300', '400', '600', '700', '800'] as const;
 const dayColorSafelist = DAY_COLOR_HUES.flatMap((h) =>
   DAY_COLOR_INTENSITIES.flatMap((i) => [`bg-${h}-${i}`, `border-${h}-${i}`, `ring-${h}-${i}`, `text-${h}-${i}`])
 );

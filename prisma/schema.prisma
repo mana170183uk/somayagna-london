@@ -101,6 +101,12 @@ model KundPosition {
   holdId     String?                     // active hold (NULL if free). NOT unique: a Full Kund hold owns 3 positions
   hold       BookingHold? @relation("HeldPositions", fields: [holdId], references: [id], onDelete: SetNull)
 
+  // Admin-blocked: reserved for VIP / off-line use. Treated as taken in availability.
+  blocked     Boolean   @default(false)
+  blockReason String?
+  blockedAt   DateTime?
+  blockedBy   String?                     // admin email who placed the block
+
   @@unique([kundId, label])
   @@index([kundId])
   @@index([holdId])

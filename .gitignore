@@ -9,3 +9,6 @@ prisma/dev.db
 prisma/migrations/dev
 coverage
 .vercel
+
+# Spec / planning docs — keep local, not in repo
+*.docx
