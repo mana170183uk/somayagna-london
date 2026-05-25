@@ -256,7 +256,9 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
                   !registration.primaryName ||
                   !registration.phone ||
                   !registration.whatsappNumber ||
-                  (registration.giftAid && (!registration.addressLine1 || !registration.town || !registration.postcode))
+                  !registration.addressLine1 ||
+                  !registration.town ||
+                  !registration.postcode
                 }
                 onClick={async () => { const ok = await createHold(); if (ok) setStep(6); }}
               >
@@ -497,6 +499,27 @@ function RegistrationForm({ value, onChange }: { value: any; onChange: (v: any) 
       <Field label="Name of second participant (optional)" full>
         <input className="input" value={value.secondParticipantName} onChange={(e) => onChange({ ...value, secondParticipantName: e.target.value })} />
       </Field>
+      <Field label="Address line 1" required full>
+        <input
+          className="input" value={value.addressLine1} required
+          placeholder="e.g. 12 Lotus Lane"
+          onChange={(e) => onChange({ ...value, addressLine1: e.target.value })}
+        />
+      </Field>
+      <Field label="Town / City" required>
+        <input
+          className="input" value={value.town} required
+          placeholder="London"
+          onChange={(e) => onChange({ ...value, town: e.target.value })}
+        />
+      </Field>
+      <Field label="Postcode" required>
+        <input
+          className="input uppercase" value={value.postcode} required
+          placeholder="SW1A 1AA"
+          onChange={(e) => onChange({ ...value, postcode: e.target.value.toUpperCase() })}
+        />
+      </Field>
       <style jsx>{`
         .input {
           width: 100%; padding: 12px 14px; border-radius: 10px;
@@ -590,43 +613,11 @@ function DonationSection({
                 <div className="text-xs text-maroon-900/90 mt-0.5 leading-relaxed">
                   I confirm that I am a UK taxpayer and I understand that if I pay less Income Tax
                   and/or Capital Gains Tax than the amount of Gift Aid claimed on all my donations
-                  in that tax year, it is my responsibility to pay any difference. We need your home
-                  address to claim Gift Aid.
+                  in that tax year, it is my responsibility to pay any difference. The charity will
+                  use the address you provided above to submit the Gift Aid claim to HMRC.
                 </div>
               </div>
             </label>
-
-            {registration.giftAid && (
-              <div className="grid sm:grid-cols-2 gap-3 mt-4 pl-8">
-                <label className="block text-sm sm:col-span-2">
-                  <span className="font-medium text-maroon-800">Address line 1 <span className="text-saffron-600">*</span></span>
-                  <input
-                    className="mt-1.5 w-full rounded-lg bg-white border border-gold-300/40 px-3 py-2 text-maroon-900 focus:outline-none focus:border-saffron-500"
-                    value={registration.addressLine1}
-                    onChange={(e) => setRegistration({ ...registration, addressLine1: e.target.value })}
-                    placeholder="e.g. 12 Lotus Lane"
-                  />
-                </label>
-                <label className="block text-sm">
-                  <span className="font-medium text-maroon-800">Town / City <span className="text-saffron-600">*</span></span>
-                  <input
-                    className="mt-1.5 w-full rounded-lg bg-white border border-gold-300/40 px-3 py-2 text-maroon-900 focus:outline-none focus:border-saffron-500"
-                    value={registration.town}
-                    onChange={(e) => setRegistration({ ...registration, town: e.target.value })}
-                    placeholder="London"
-                  />
-                </label>
-                <label className="block text-sm">
-                  <span className="font-medium text-maroon-800">Postcode <span className="text-saffron-600">*</span></span>
-                  <input
-                    className="mt-1.5 w-full rounded-lg bg-white border border-gold-300/40 px-3 py-2 text-maroon-900 focus:outline-none focus:border-saffron-500 uppercase"
-                    value={registration.postcode}
-                    onChange={(e) => setRegistration({ ...registration, postcode: e.target.value.toUpperCase() })}
-                    placeholder="SW1A 1AA"
-                  />
-                </label>
-              </div>
-            )}
           </div>
         </div>
       )}
