@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { getAdminFromCookies } from '@/lib/auth';
 import { formatDateLong, formatGBP, formatTime, SESSION_CAPACITY } from '@/lib/constants';
 import { Mandala } from '@/components/ui/Ornaments';
+import { paletteForDate } from '@/lib/dayColors';
 
 export const dynamic = 'force-dynamic';
 
@@ -157,11 +158,12 @@ export default async function AdminHome() {
           const dayDon = d.sessions.reduce((acc, s) => acc + s.bookings.reduce((x, b) => x + b.donationPence, 0), 0);
           const dayCap = d.sessions.length * SESSION_CAPACITY;
           const dayPct = dayCap > 0 ? Math.round((dayTaken / dayCap) * 100) : 0;
+          const palette = paletteForDate(d.date);
           return (
-            <section key={d.id} className="card overflow-hidden">
-              <div className="px-5 py-4 bg-temple-gradient border-b border-gold-200 flex flex-wrap justify-between items-baseline gap-2">
+            <section key={d.id} className={`card overflow-hidden border-l-4 ${palette.border}`}>
+              <div className={`px-5 py-4 border-b border-gold-200 flex flex-wrap justify-between items-baseline gap-2 ${palette.bg}`}>
                 <div>
-                  <div className="text-xs tracking-widest uppercase text-maroon-700">{d.yagnaType.replace('_', ' ')}</div>
+                  <div className={`text-xs tracking-widest uppercase ${palette.accentText}`}>{d.yagnaType.replace('_', ' ')}</div>
                   <div className="h-display text-2xl text-maroon-800">{formatDateLong(d.date)} — {d.title}</div>
                 </div>
                 <div className="text-right">

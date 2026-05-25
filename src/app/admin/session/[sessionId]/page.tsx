@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { getAdminFromCookies } from '@/lib/auth';
 import { formatDateLong, formatGBP, formatTime, SESSION_CAPACITY } from '@/lib/constants';
 import AdminSessionPanel from '@/components/admin/AdminSessionPanel';
+import { paletteForDate } from '@/lib/dayColors';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,12 +31,13 @@ export default async function SessionDetail({ params }: { params: Promise<{ sess
   if (!session) notFound();
 
   const taken = session.kunds.reduce((acc, k) => acc + k.positions.filter((p) => p.bookingId).length, 0);
+  const palette = paletteForDate(session.eventDay.date);
 
   return (
     <div>
       <Link href="/admin" className="btn-ghost text-sm">← All days</Link>
-      <header className="mt-2">
-        <p className="eyebrow mb-2">{session.eventDay.yagnaType.replace('_', ' ')}</p>
+      <header className={`mt-2 rounded-2xl border-l-4 px-5 py-4 ${palette.bg} ${palette.border}`}>
+        <p className={`eyebrow mb-2 ${palette.accentText}`}>{session.eventDay.yagnaType.replace('_', ' ')}</p>
         <h1 className="h-display text-3xl text-maroon-800">
           {formatDateLong(session.eventDay.date)} — {formatTime(session.startTime)}
         </h1>

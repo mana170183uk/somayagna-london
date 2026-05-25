@@ -3,6 +3,7 @@ import { EVENT, formatGBP, PRICE_FULL_KUND_PENCE, PRICE_SINGLE_PENCE } from '@/l
 import { Mandala, Diya, OmGlyph, LotusBorder } from '@/components/ui/Ornaments';
 import { Logo } from '@/components/ui/Logo';
 import StickyCTA from '@/components/landing/StickyCTA';
+import { paletteForDate } from '@/lib/dayColors';
 
 export default function Home() {
   return (
@@ -158,14 +159,14 @@ function SpiritualIntro() {
 /* ─────────────────────────  TIMELINE ───────────────────────── */
 
 const TIMELINE = [
-  { date: '14 Jun', label: 'Programme Welcome', type: 'welcome', desc: 'Inauguration & introduction. Open to all — no booking required.' },
-  { date: '15 Jun', label: 'Purshotam Yagna', type: 'purshotam', desc: 'The opening sacred fire ritual. Active booking begins.' },
-  { date: '16 Jun', label: 'Vishnu Gopal Yagna', type: 'vishnu', desc: 'Daily yagna invoking Lord Vishnu.' },
-  { date: '17 Jun', label: 'Vishnu Gopal Yagna', type: 'vishnu', desc: 'Daily yagna invoking Lord Vishnu.' },
-  { date: '18 Jun', label: 'Vishnu Gopal Yagna', type: 'vishnu', desc: 'Daily yagna invoking Lord Vishnu.' },
-  { date: '19 Jun', label: 'Vishnu Gopal Yagna', type: 'vishnu', desc: 'Daily yagna invoking Lord Vishnu.' },
-  { date: '20 Jun', label: 'Vishnu Gopal Yagna', type: 'vishnu', desc: 'Daily yagna invoking Lord Vishnu.' },
-  { date: '21 Jun', label: 'Vishnu Gopal Yagna', type: 'vishnu', desc: 'Concluding day of the programme.' }
+  { iso: '2026-06-14', date: '14 Jun', label: 'Programme Welcome', type: 'welcome', desc: 'Inauguration & introduction. Open to all — no booking required.' },
+  { iso: '2026-06-15', date: '15 Jun', label: 'Purshotam Yagna', type: 'purshotam', desc: 'The opening sacred fire ritual. Active booking begins.' },
+  { iso: '2026-06-16', date: '16 Jun', label: 'Vishnu Gopal Yagna', type: 'vishnu', desc: 'Daily yagna invoking Lord Vishnu.' },
+  { iso: '2026-06-17', date: '17 Jun', label: 'Vishnu Gopal Yagna', type: 'vishnu', desc: 'Daily yagna invoking Lord Vishnu.' },
+  { iso: '2026-06-18', date: '18 Jun', label: 'Vishnu Gopal Yagna', type: 'vishnu', desc: 'Daily yagna invoking Lord Vishnu.' },
+  { iso: '2026-06-19', date: '19 Jun', label: 'Vishnu Gopal Yagna', type: 'vishnu', desc: 'Daily yagna invoking Lord Vishnu.' },
+  { iso: '2026-06-20', date: '20 Jun', label: 'Vishnu Gopal Yagna', type: 'vishnu', desc: 'Daily yagna invoking Lord Vishnu.' },
+  { iso: '2026-06-21', date: '21 Jun', label: 'Vishnu Gopal Yagna', type: 'vishnu', desc: 'Concluding day of the programme.' }
 ];
 
 function Timeline() {
@@ -181,16 +182,19 @@ function Timeline() {
         </div>
 
         <ol className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-          {TIMELINE.map((t) => (
-            <li key={t.date} className={`card p-4 relative overflow-hidden ${t.type === 'welcome' ? 'ring-1 ring-gold-300' : ''}`}>
-              <div className={`text-xs tracking-wider uppercase mb-1 ${t.type === 'welcome' ? 'text-gold-700' : t.type === 'purshotam' ? 'text-saffron-700' : 'text-maroon-700'}`}>
-                {t.date}
-              </div>
-              <div className="h-display text-lg leading-tight text-maroon-900">{t.label}</div>
-              <p className="text-xs text-maroon-900/85 mt-2">{t.desc}</p>
-              <div className={`absolute inset-x-0 bottom-0 h-1 ${t.type === 'welcome' ? 'bg-gold-400' : t.type === 'purshotam' ? 'bg-saffron-500' : 'bg-maroon-600'}`} />
-            </li>
-          ))}
+          {TIMELINE.map((t) => {
+            const palette = paletteForDate(t.iso);
+            return (
+              <li key={t.date} className={`relative overflow-hidden rounded-2xl border p-4 shadow-soft-gold/30 ${palette.bg} ${palette.border}`}>
+                <div className={`text-xs tracking-wider uppercase mb-1 ${palette.accentText}`}>
+                  {t.date}
+                </div>
+                <div className="h-display text-lg leading-tight text-maroon-900">{t.label}</div>
+                <p className="text-xs text-maroon-900 mt-2">{t.desc}</p>
+                <div className={`absolute inset-x-0 bottom-0 h-1 ${palette.border.replace('border-', 'bg-')}`} />
+              </li>
+            );
+          })}
         </ol>
       </div>
     </section>

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { classNames } from '@/lib/utils';
 import KundMandala from './KundMandala';
 import KundVenuePlan from './KundVenuePlan';
+import { paletteForDate } from '@/lib/dayColors';
 
 interface SessionLite { id: string; startTime: string; label: string; }
 interface DayLite {
@@ -383,6 +384,8 @@ function DateGrid({ days, value, onChange }: { days: DayLite[]; value: string | 
       {days.map((d) => {
         const isWelcome = d.yagnaType === 'WELCOME';
         const isPurshotam = d.yagnaType === 'PURSHOTAM';
+        const palette = paletteForDate(d.date);
+        const isSelected = d.isActive && value === d.id;
         return (
           <button
             key={d.id}
@@ -392,14 +395,18 @@ function DateGrid({ days, value, onChange }: { days: DayLite[]; value: string | 
             className={classNames(
               'rounded-2xl p-4 text-left border transition relative overflow-hidden',
               !d.isActive && 'opacity-60 cursor-not-allowed bg-ivory-50 border-gold-200',
-              d.isActive && value === d.id && 'bg-saffron-500 text-ivory-50 border-saffron-500 shadow-soft-gold',
-              d.isActive && value !== d.id && 'bg-ivory-50 border-gold-300/50 hover:border-saffron-400 hover:shadow-soft-gold/50'
+              d.isActive && !isSelected && palette.bg,
+              d.isActive && !isSelected && palette.border,
+              d.isActive && !isSelected && 'hover:shadow-soft-gold hover:-translate-y-0.5',
+              isSelected && `${palette.bg} ${palette.border} ring-4 ${palette.ring} shadow-soft-gold scale-[1.02]`
             )}
           >
-            <div className="text-xs uppercase tracking-widest opacity-80">{formatDate(d.date)}</div>
-            <div className="h-display text-lg mt-1">{yagnaLabel[d.yagnaType]}</div>
-            {isWelcome && <span className="absolute top-2 right-2 text-[10px] tracking-widest uppercase px-2 py-0.5 rounded-full bg-gold-200 text-maroon-800">Info only</span>}
-            {isPurshotam && value !== d.id && <span className="absolute top-2 right-2 text-[10px] tracking-widest uppercase px-2 py-0.5 rounded-full bg-saffron-100 text-saffron-800">Day 1</span>}
+            {/* Color stripe on the left edge for stronger identity */}
+            {d.isActive && <span className={classNames('absolute left-0 top-0 bottom-0 w-1.5', palette.border.replace('border-', 'bg-'))} />}
+            <div className={classNames('text-xs uppercase tracking-widest', isSelected ? palette.accentText : 'text-maroon-800/80')}>{formatDate(d.date)}</div>
+            <div className={classNames('h-display text-lg mt-1', isSelected ? palette.accentText : 'text-maroon-900')}>{yagnaLabel[d.yagnaType]}</div>
+            {isWelcome && <span className="absolute top-2 right-2 text-[10px] tracking-widest uppercase px-2 py-0.5 rounded-full bg-maroon-700/15 text-maroon-800">Info only</span>}
+            {isPurshotam && !isSelected && <span className="absolute top-2 right-2 text-[10px] tracking-widest uppercase px-2 py-0.5 rounded-full bg-saffron-500 text-ivory-50 font-bold">Day 1</span>}
           </button>
         );
       })}
