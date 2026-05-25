@@ -131,20 +131,29 @@ export default async function AdminHome() {
             </span>
           </div>
           <ul className="divide-y divide-gold-100">
-            {recent.map((b) => (
-              <li key={b.id} className="py-2.5 grid grid-cols-12 gap-3 items-center text-sm">
-                <span className="col-span-3 font-mono text-xs text-maroon-700">{b.reference}</span>
-                <span className="col-span-3 text-maroon-900 font-medium truncate">{b.primaryName}</span>
-                <span className="col-span-3 text-maroon-700/90 truncate">
-                  Kund {b.kundNumber} · {b.positions.join(',')} · {formatTime(b.session.startTime)}
-                </span>
-                <span className="col-span-2 text-maroon-900 tabular-nums">
-                  {formatGBP(b.amountPence + b.donationPence)}
-                  {b.donationPence > 0 && <span className="text-saffron-700 text-[10px] ml-1">+♥</span>}
-                </span>
-                <span className="col-span-1 text-right text-[10px] tracking-widest text-maroon-700/80 uppercase">{b.payment?.provider ?? ''}</span>
-              </li>
-            ))}
+            {recent.map((b) => {
+              const dayPalette = paletteForDate(b.session.eventDay.date);
+              return (
+                <li key={b.id} className="py-2.5 grid grid-cols-12 gap-3 items-center text-sm">
+                  <span className="col-span-2 font-mono text-[11px] text-maroon-700">{b.reference}</span>
+                  <span className="col-span-3 text-maroon-900 font-medium truncate">{b.primaryName}</span>
+                  <span className={`col-span-3 inline-flex items-center gap-2 truncate`}>
+                    <span className={`inline-block w-2.5 h-2.5 rounded-full flex-shrink-0 ${dayPalette.border.replace('border-', 'bg-')}`} title={dayPalette.name} />
+                    <span className="text-maroon-900 font-medium truncate">
+                      {formatDateLong(b.session.eventDay.date)}
+                    </span>
+                  </span>
+                  <span className="col-span-2 text-maroon-700/90 truncate">
+                    Kund {b.kundNumber} · {b.positions.join(',')} · {formatTime(b.session.startTime)}
+                  </span>
+                  <span className="col-span-1 text-maroon-900 tabular-nums text-right">
+                    {formatGBP(b.amountPence + b.donationPence)}
+                    {b.donationPence > 0 && <span className="text-saffron-700 text-[10px] ml-1">+♥</span>}
+                  </span>
+                  <span className="col-span-1 text-right text-[10px] tracking-widest text-maroon-700/80 uppercase">{b.payment?.provider ?? ''}</span>
+                </li>
+              );
+            })}
           </ul>
         </section>
       )}
