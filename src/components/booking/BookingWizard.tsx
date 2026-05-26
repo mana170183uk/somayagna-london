@@ -8,17 +8,24 @@ import KundVenuePlan from './KundVenuePlan';
 import { paletteForDate, paletteForSession } from '@/lib/dayColors';
 import { SessionIcon } from '@/components/ui/SessionIcon';
 
-interface SessionLite { id: string; startTime: string; label: string; }
-interface DayLite {
-  id: string; date: string; title: string;
-  yagnaType: 'WELCOME' | 'PURSHOTAM' | 'VISHNU_GOPAL';
-  isActive: boolean; sessions: SessionLite[];
+/* ─────────────────────────  TYPES  ───────────────────────── */
+
+type YagnaTypeId = 'PURSHOTAM' | 'VISHNU_GOPAL' | 'PITRU';
+
+interface SessionLite { id: string; startTime: string; label: string; optional: boolean; }
+interface YagnaLite {
+  id: string; type: YagnaTypeId; title: string; kundCount: number;
+  sessions: SessionLite[];
 }
-interface PositionView { id: string; label: 'A' | 'B' | 'C'; state: 'FREE' | 'HELD' | 'BOOKED'; bookedBy?: string; }
+interface DayLite { id: string; date: string; yagnas: YagnaLite[]; }
+
+interface PositionView { id: string; label: 'A' | 'B' | 'C'; state: 'FREE' | 'HELD' | 'BOOKED' | 'BLOCKED'; bookedBy?: string; }
 interface KundView { id: string; number: number; positions: PositionView[]; fullyFree: boolean; }
 interface Availability {
   sessionId: string; date: string; startTime: string;
-  remaining: number; capacity: number; kunds: KundView[];
+  remaining: number; capacity: number; kundCount: number;
+  yagnaType: YagnaTypeId; yagnaTitle: string;
+  kunds: KundView[];
 }
 
 type BookingType = 'SINGLE_POSITION' | 'FULL_KUND';
@@ -38,21 +45,23 @@ function formatTime(t: string) {
   return new Intl.DateTimeFormat('en-GB', { hour: 'numeric', minute: '2-digit' }).format(d);
 }
 
-const yagnaLabel: Record<DayLite['yagnaType'], string> = {
-  WELCOME: 'Welcome',
-  PURSHOTAM: 'Purshotam Yagna',
-  VISHNU_GOPAL: 'Vishnu Gopal Yagna'
-};
+/* ─────────────────────────  COMPONENT  ───────────────────────── */
 
 export default function BookingWizard({ initialDays, enabledProviders }: { initialDays: DayLite[]; enabledProviders: string[]; }) {
   const search = useSearchParams();
   const router = useRouter();
 
-  // Steps: 1 date · 2 time · 3 type · 4 kund/position · 5 register · 6 pay
+  // 7 steps: 1 date · 2 yagna · 3 time · 4 type · 5 kund/seat · 6 details · 7 payment
   const [step, setStep] = useState(1);
 
-  const activeDays = useMemo(() => initialDays.filter((d) => d.isActive), [initialDays]);
+  // Days with at least one yagna with at least one enabled session
+  const activeDays = useMemo(
+    () => initialDays.filter((d) => d.yagnas.some((y) => y.sessions.length > 0)),
+    [initialDays]
+  );
+
   const [dayId, setDayId] = useState<string | null>(null);
+  const [yagnaInstanceId, setYagnaInstanceId] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [bookingType, setBookingType] = useState<BookingType>(() =>
     (search.get('type') as BookingType) || 'SINGLE_POSITION'
@@ -62,7 +71,6 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
   const [availability, setAvailability] = useState<Availability | null>(null);
   const [loadingAvail, setLoadingAvail] = useState(false);
 
-  // Hold + checkout
   const [holdId, setHoldId] = useState<string | null>(null);
   const [holdExpires, setHoldExpires] = useState<number | null>(null);
   const [registration, setRegistration] = useState({
@@ -72,13 +80,13 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
     addressLine1: '', town: '', postcode: '', giftAid: false
   });
   const [donationEnabled, setDonationEnabled] = useState(false);
-  const [donationPence, setDonationPence] = useState(5100); // default suggestion: £51
+  const [donationPence, setDonationPence] = useState(5100);
   const [provider, setProvider] = useState<Provider>(() => (enabledProviders[0] as Provider) ?? 'mock');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [layoutMode, setLayoutMode] = useState<'venue' | 'mandala'>('venue');
 
-  // Reload availability whenever session changes
+  /* Availability refresh when session changes */
   useEffect(() => {
     if (!sessionId) { setAvailability(null); return; }
     let alive = true;
@@ -96,7 +104,7 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
       finally { if (alive) setLoadingAvail(false); }
     };
     fetchAvail();
-    const t = setInterval(fetchAvail, 15000); // gentle live refresh
+    const t = setInterval(fetchAvail, 15000);
     return () => { alive = false; clearInterval(t); };
   }, [sessionId]);
 
@@ -110,7 +118,8 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
   }, [search, activeDays]);
 
   const selectedDay = activeDays.find((d) => d.id === dayId) ?? null;
-  const selectedSession = selectedDay?.sessions.find((s) => s.id === sessionId) ?? null;
+  const selectedYagna = selectedDay?.yagnas.find((y) => y.id === yagnaInstanceId) ?? null;
+  const selectedSession = selectedYagna?.sessions.find((s) => s.id === sessionId) ?? null;
 
   const basePence = bookingType === 'FULL_KUND' ? PRICE_FULL : PRICE_SINGLE * positions.length;
   const activeDonationPence = donationEnabled ? donationPence : 0;
@@ -166,12 +175,13 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
       if (provider === 'mock') {
         router.push(`/confirmation/${data.bookingId}`);
       } else {
-        // Redirect to external provider
         window.location.href = data.url;
       }
     } catch (e: any) { setError(e.message); }
     finally { setSubmitting(false); }
   }
+
+  /* ─────────────────────────  RENDER  ───────────────────────── */
 
   return (
     <div className="grid lg:grid-cols-12 gap-8">
@@ -179,29 +189,43 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
         <Steps step={step} onJump={(s) => s < step && setStep(s)} />
 
         {step === 1 && (
-          <StepCard title="Select a date" subtitle="Active days are 15 – 21 June.">
-            <DateGrid days={initialDays} value={dayId} onChange={(id) => { setDayId(id); setSessionId(null); setStep(2); }} />
+          <StepCard title="Select a date" subtitle="Active days are 14 – 21 June.">
+            <DateGrid days={activeDays} value={dayId} onChange={(id) => {
+              setDayId(id); setYagnaInstanceId(null); setSessionId(null); setStep(2);
+            }} />
           </StepCard>
         )}
 
         {step === 2 && selectedDay && (
-          <StepCard title="Select a session" subtitle={`${formatDate(selectedDay.date)} · ${selectedDay.title}`}>
-            <SessionGrid sessions={selectedDay.sessions} value={sessionId} onChange={(id) => { setSessionId(id); setStep(3); }} />
+          <StepCard title="Select a yagna" subtitle={`${formatDate(selectedDay.date)} — choose which yagna you'd like to attend.`}>
+            <YagnaGrid yagnas={selectedDay.yagnas} value={yagnaInstanceId} onChange={(id) => {
+              setYagnaInstanceId(id); setSessionId(null); setStep(3);
+            }} />
             <BackButton onClick={() => setStep(1)} />
           </StepCard>
         )}
 
-        {step === 3 && (
-          <StepCard title="Choose a booking type" subtitle="Both offerings receive the same blessings.">
-            <BookingTypeGrid value={bookingType} onChange={setBookingType} />
-            <div className="flex justify-between mt-6">
-              <BackButton onClick={() => setStep(2)} />
-              <button className="btn-primary" disabled={!canProceedFromType} onClick={() => setStep(4)}>Continue</button>
-            </div>
+        {step === 3 && selectedDay && selectedYagna && (
+          <StepCard
+            title="Select a time"
+            subtitle={`${formatDate(selectedDay.date)} · ${selectedYagna.title} — choose a session.`}
+          >
+            <SessionGrid yagna={selectedYagna} value={sessionId} onChange={(id) => { setSessionId(id); setStep(4); }} />
+            <BackButton onClick={() => setStep(2)} />
           </StepCard>
         )}
 
         {step === 4 && (
+          <StepCard title="Choose a booking type" subtitle="Both offerings receive the same blessings.">
+            <BookingTypeGrid value={bookingType} onChange={setBookingType} />
+            <div className="flex justify-between mt-6">
+              <BackButton onClick={() => setStep(3)} />
+              <button className="btn-primary" disabled={!canProceedFromType} onClick={() => setStep(5)}>Continue</button>
+            </div>
+          </StepCard>
+        )}
+
+        {step === 5 && (
           <StepCard
             title={bookingType === 'FULL_KUND' ? 'Select an available Kund' : 'Select Kund & position'}
             subtitle={availability ? `${availability.remaining} of ${availability.capacity} seats available` : 'Loading availability…'}
@@ -232,7 +256,7 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
                     dateLabel={formatDate(selectedDay.date)}
                     timeLabel={formatTime(selectedSession.startTime)}
                     startTime={selectedSession.startTime}
-                    yagnaTitle={selectedDay.title}
+                    yagnaTitle={availability.yagnaTitle}
                     onSelect={(k, ps) => { setKundNumber(k); setPositions(ps); }}
                   />
                 ) : (
@@ -244,20 +268,20 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
                     dateLabel={formatDate(selectedDay.date)}
                     timeLabel={formatTime(selectedSession.startTime)}
                     startTime={selectedSession.startTime}
-                    yagnaTitle={selectedDay.title}
+                    yagnaTitle={availability.yagnaTitle}
                     onSelect={(k, ps) => { setKundNumber(k); setPositions(ps); }}
                   />
                 )}
               </>
             )}
             <div className="flex justify-between mt-6">
-              <BackButton onClick={() => setStep(3)} />
-              <button className="btn-primary" disabled={!canProceedFromKund} onClick={() => setStep(5)}>Continue</button>
+              <BackButton onClick={() => setStep(4)} />
+              <button className="btn-primary" disabled={!canProceedFromKund} onClick={() => setStep(6)}>Continue</button>
             </div>
           </StepCard>
         )}
 
-        {step === 5 && (
+        {step === 6 && (
           <StepCard title="Your details" subtitle="We will send your confirmation here.">
             <RegistrationForm value={registration} onChange={setRegistration} />
             <DonationSection
@@ -269,7 +293,7 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
               setRegistration={setRegistration}
             />
             <div className="flex justify-between mt-6">
-              <BackButton onClick={() => setStep(4)} />
+              <BackButton onClick={() => setStep(5)} />
               <button
                 className="btn-primary"
                 disabled={
@@ -280,7 +304,7 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
                   !registration.town ||
                   !registration.postcode
                 }
-                onClick={async () => { const ok = await createHold(); if (ok) setStep(6); }}
+                onClick={async () => { const ok = await createHold(); if (ok) setStep(7); }}
               >
                 Continue to payment
               </button>
@@ -289,12 +313,12 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
           </StepCard>
         )}
 
-        {step === 6 && holdId && (
+        {step === 7 && holdId && (
           <StepCard title="Payment" subtitle={`Total ${gbp(totalPence)} · ${bookingType === 'FULL_KUND' ? 'Full Kund' : `${positions.length} position(s)`}`}>
-            <HoldCountdown expires={holdExpires} onExpire={() => { releaseHold(); setStep(4); setError('Your hold expired. Please choose again.'); }} />
+            <HoldCountdown expires={holdExpires} onExpire={() => { releaseHold(); setStep(5); setError('Your hold expired. Please choose again.'); }} />
             <ProviderPicker enabled={enabledProviders} value={provider} onChange={setProvider} />
             <div className="flex justify-between mt-6">
-              <button className="btn-ghost" disabled={submitting} onClick={async () => { await releaseHold(); setStep(5); }}>← Back</button>
+              <button className="btn-ghost" disabled={submitting} onClick={async () => { await releaseHold(); setStep(6); }}>← Back</button>
               <button className="btn-primary" disabled={submitting} onClick={submitPayment}>
                 {submitting ? 'Processing…' : provider === 'mock' ? `Pay ${gbp(totalPence)} (demo)` : `Pay with ${provider === 'stripe' ? 'Card (Stripe)' : 'PayPal'}`}
               </button>
@@ -307,6 +331,7 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
       <aside className="lg:col-span-4">
         <SummaryCard
           day={selectedDay}
+          yagna={selectedYagna}
           session={selectedSession}
           bookingType={bookingType}
           kundNumber={kundNumber}
@@ -322,11 +347,12 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
 
 /* ─────────────────────────  STEP UI  ───────────────────────── */
 
+const STEP_LABELS = ['Date', 'Yagna', 'Time', 'Type', 'Kund & seat', 'Your details', 'Payment'];
+
 function Steps({ step, onJump }: { step: number; onJump: (s: number) => void }) {
-  const labels = ['Date', 'Time', 'Type', 'Kund & seat', 'Your details', 'Payment'];
   return (
     <ol className="flex flex-wrap gap-2 text-xs">
-      {labels.map((l, i) => {
+      {STEP_LABELS.map((l, i) => {
         const n = i + 1;
         const isActive = step === n;
         const isDone = step > n;
@@ -361,7 +387,7 @@ function StepCard({ title, subtitle, children }: { title: string; subtitle?: str
   );
 }
 
-function BackButton({ onClick }: { onClick: () => void }) { return <button onClick={onClick} className="btn-ghost">← Back</button>; }
+function BackButton({ onClick }: { onClick: () => void }) { return <button onClick={onClick} className="btn-ghost mt-4">← Back</button>; }
 
 function LayoutToggle({ value, onChange }: { value: 'venue' | 'mandala'; onChange: (v: 'venue' | 'mandala') => void }) {
   return (
@@ -401,31 +427,34 @@ function DateGrid({ days, value, onChange }: { days: DayLite[]; value: string | 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       {days.map((d) => {
-        const isWelcome = d.yagnaType === 'WELCOME';
-        const isPurshotam = d.yagnaType === 'PURSHOTAM';
         const palette = paletteForDate(d.date);
-        const isSelected = d.isActive && value === d.id;
+        const isSelected = value === d.id;
         return (
           <button
             key={d.id}
             type="button"
-            disabled={!d.isActive}
             onClick={() => onChange(d.id)}
             className={classNames(
               'rounded-2xl p-4 text-left border transition relative overflow-hidden',
-              !d.isActive && 'opacity-60 cursor-not-allowed bg-ivory-50 border-gold-200',
-              d.isActive && !isSelected && palette.bg,
-              d.isActive && !isSelected && palette.border,
-              d.isActive && !isSelected && 'hover:shadow-soft-gold hover:-translate-y-0.5',
+              !isSelected && `${palette.bg} ${palette.border} hover:shadow-soft-gold hover:-translate-y-0.5`,
               isSelected && `${palette.bg} ${palette.border} ring-4 ${palette.ring} shadow-soft-gold scale-[1.02]`
             )}
           >
-            {/* Color stripe on the left edge for stronger identity */}
-            {d.isActive && <span className={classNames('absolute left-0 top-0 bottom-0 w-1.5', palette.border.replace('border-', 'bg-'))} />}
+            <span className={classNames('absolute left-0 top-0 bottom-0 w-1.5', palette.border.replace('border-', 'bg-'))} />
             <div className={classNames('text-xs uppercase tracking-widest', isSelected ? palette.accentText : 'text-maroon-800/80')}>{formatDate(d.date)}</div>
-            <div className={classNames('h-display text-lg mt-1', isSelected ? palette.accentText : 'text-maroon-900')}>{yagnaLabel[d.yagnaType]}</div>
-            {isWelcome && <span className="absolute top-2 right-2 text-[10px] tracking-widest uppercase px-2 py-0.5 rounded-full bg-maroon-700/15 text-maroon-800">Info only</span>}
-            {isPurshotam && !isSelected && <span className="absolute top-2 right-2 text-[10px] tracking-widest uppercase px-2 py-0.5 rounded-full bg-saffron-500 text-ivory-50 font-bold">Day 1</span>}
+            <div className="mt-1 flex flex-wrap gap-1">
+              {d.yagnas.map((y) => (
+                <span
+                  key={y.id}
+                  className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-ivory-50/80 text-maroon-800 border border-maroon-200"
+                >
+                  {y.type === 'VISHNU_GOPAL' ? 'Vishnu Gopal' : y.type === 'PURSHOTAM' ? 'Purshotam' : 'Pitru'}
+                </span>
+              ))}
+            </div>
+            <div className="text-xs text-maroon-700 mt-2">
+              {d.yagnas.reduce((a, y) => a + y.sessions.length, 0)} session{d.yagnas.reduce((a, y) => a + y.sessions.length, 0) === 1 ? '' : 's'}
+            </div>
           </button>
         );
       })}
@@ -433,10 +462,41 @@ function DateGrid({ days, value, onChange }: { days: DayLite[]; value: string | 
   );
 }
 
-function SessionGrid({ sessions, value, onChange }: { sessions: SessionLite[]; value: string | null; onChange: (id: string) => void }) {
+function YagnaGrid({ yagnas, value, onChange }: { yagnas: YagnaLite[]; value: string | null; onChange: (id: string) => void }) {
+  return (
+    <div className="grid sm:grid-cols-2 gap-3">
+      {yagnas.map((y) => {
+        const isSelected = value === y.id;
+        const sessionCount = y.sessions.length;
+        return (
+          <button
+            key={y.id}
+            type="button"
+            disabled={sessionCount === 0}
+            onClick={() => onChange(y.id)}
+            className={classNames(
+              'rounded-2xl p-5 border-2 text-left transition relative overflow-hidden',
+              sessionCount === 0 && 'opacity-50 cursor-not-allowed bg-ivory-50 border-gold-300',
+              sessionCount > 0 && isSelected && 'bg-gradient-to-br from-saffron-500 to-saffron-700 text-ivory-50 border-saffron-700 shadow-soft-gold scale-[1.02]',
+              sessionCount > 0 && !isSelected && 'bg-ivory-50 border-gold-400 hover:border-saffron-500 hover:shadow-soft-gold'
+            )}
+          >
+            <div className={classNames('text-xs uppercase tracking-widest', isSelected ? 'text-gold-100' : 'text-maroon-700')}>{y.type.replace('_', ' ')}</div>
+            <div className={classNames('h-display text-2xl mt-1', isSelected ? 'text-ivory-50' : 'text-maroon-800')}>{y.title}</div>
+            <div className={classNames('text-xs mt-2', isSelected ? 'text-gold-100' : 'text-maroon-700')}>
+              {y.kundCount} Kunds · {sessionCount} session{sessionCount === 1 ? '' : 's'} today
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function SessionGrid({ yagna, value, onChange }: { yagna: YagnaLite; value: string | null; onChange: (id: string) => void }) {
   return (
     <div className="grid sm:grid-cols-3 gap-3">
-      {sessions.map((s) => {
+      {yagna.sessions.map((s) => {
         const palette = paletteForSession(s.startTime);
         const isSelected = value === s.id;
         return (
@@ -449,13 +509,12 @@ function SessionGrid({ sessions, value, onChange }: { sessions: SessionLite[]; v
                 : `${palette.bg} ${palette.border} hover:-translate-y-0.5 hover:shadow-soft-gold`
             )}
           >
-            {/* Top accent stripe */}
             <span className={classNames('absolute top-0 left-0 right-0 h-1.5', palette.border.replace('border-', 'bg-'))} />
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className={classNames('text-xs uppercase tracking-widest font-semibold', palette.accentText)}>{s.label}</div>
                 <div className="h-display text-3xl mt-1 text-maroon-900">{formatTime(s.startTime)}</div>
-                <div className="text-xs mt-1 text-maroon-700">11 Kunds · 33 seats</div>
+                <div className="text-xs mt-1 text-maroon-700">{yagna.kundCount} Kunds · {yagna.kundCount * 3} seats</div>
               </div>
               <span className={palette.accentText}>
                 <SessionIcon kind={palette.icon} className="w-7 h-7" />
@@ -580,7 +639,7 @@ function DonationSection({
   registration: any;
   setRegistration: (r: any) => void;
 }) {
-  const presets = [1100, 2100, 5100, 10100, 50100]; // £11, £21, £51, £101, £501
+  const presets = [1100, 2100, 5100, 10100, 50100];
 
   return (
     <div className="mt-6 rounded-2xl border border-saffron-300/60 bg-gradient-to-br from-saffron-50 via-ivory-50 to-ivory-100 p-5">
@@ -624,10 +683,7 @@ function DonationSection({
           <div className="mt-3 flex items-center gap-2">
             <label className="text-sm text-maroon-800 whitespace-nowrap">Or custom (£):</label>
             <input
-              type="number"
-              min={1}
-              max={10000}
-              step={1}
+              type="number" min={1} max={10000} step={1}
               value={pence > 0 ? Math.round(pence / 100) : ''}
               onChange={(e) => {
                 const v = parseInt(e.target.value || '0', 10);
@@ -638,7 +694,6 @@ function DonationSection({
             />
           </div>
 
-          {/* Gift Aid — live +25% calculator + prominent treatment */}
           {pence > 0 && (
             <div className="mt-5 rounded-xl bg-gradient-to-br from-gold-100 via-saffron-50 to-ivory-50 border-2 border-gold-400/60 p-4 shadow-soft-gold">
               <label className="flex items-start gap-3 cursor-pointer">
@@ -734,8 +789,8 @@ function HoldCountdown({ expires, onExpire }: { expires: number | null; onExpire
   );
 }
 
-function SummaryCard({ day, session, bookingType, kundNumber, positions, basePence, donationPence, totalPence }: {
-  day: DayLite | null; session: SessionLite | null; bookingType: BookingType;
+function SummaryCard({ day, yagna, session, bookingType, kundNumber, positions, basePence, donationPence, totalPence }: {
+  day: DayLite | null; yagna: YagnaLite | null; session: SessionLite | null; bookingType: BookingType;
   kundNumber: number | null; positions: ('A'|'B'|'C')[];
   basePence: number; donationPence: number; totalPence: number;
 }) {
@@ -745,7 +800,7 @@ function SummaryCard({ day, session, bookingType, kundNumber, positions, basePen
       <div className="h-display text-2xl text-maroon-800 mt-1">Booking summary</div>
       <dl className="mt-4 space-y-2 text-sm">
         <Row k="Date" v={day ? formatDate(day.date) : '—'} />
-        <Row k="Yagna" v={day ? day.title : '—'} />
+        <Row k="Yagna" v={yagna ? yagna.title : '—'} />
         <Row k="Session" v={session ? `${session.label} · ${formatTime(session.startTime)}` : '—'} />
         <Row k="Type" v={bookingType === 'FULL_KUND' ? 'Full Kund' : 'Single Position'} />
         <Row k="Kund" v={kundNumber ? `Kund ${kundNumber}` : '—'} />
@@ -756,11 +811,11 @@ function SummaryCard({ day, session, bookingType, kundNumber, positions, basePen
         {donationPence > 0 && <Row k="Donation (charity)" v={gbp(donationPence)} />}
       </div>
       <div className="mt-3 pt-3 border-t border-gold-200 flex items-center justify-between">
-        <span className="text-sm text-maroon-700">Total</span>
+        <span className="text-sm text-maroon-700/90">Total</span>
         <span className="h-display text-3xl text-saffron-700">{gbp(totalPence)}</span>
       </div>
       <p className="text-xs text-maroon-900/85 mt-3 leading-relaxed">
-        Payment is processed in £ GBP. Your seat will be confirmed by email immediately after successful payment.
+        Payment is processed in £ GBP. Your seat will be confirmed by email/WhatsApp immediately after successful payment.
       </p>
     </div>
   );

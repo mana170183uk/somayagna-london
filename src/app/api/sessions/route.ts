@@ -4,16 +4,28 @@ import { prisma } from '@/lib/prisma';
 export async function GET() {
   const days = await prisma.eventDay.findMany({
     orderBy: { date: 'asc' },
-    include: { sessions: { orderBy: { startTime: 'asc' } } }
+    include: {
+      yagnaInstances: {
+        orderBy: { yagnaType: 'asc' },
+        include: {
+          sessions: {
+            where: { enabled: true },
+            orderBy: { startTime: 'asc' },
+            select: { id: true, startTime: true, label: true, optional: true }
+          }
+        }
+      }
+    }
   });
   return NextResponse.json({
     days: days.map((d) => ({
       id: d.id,
       date: d.date.toISOString().slice(0, 10),
-      title: d.title,
-      yagnaType: d.yagnaType,
-      isActive: d.isActive,
-      sessions: d.sessions.map((s) => ({ id: s.id, startTime: s.startTime, label: s.label }))
+      description: d.description,
+      yagnas: d.yagnaInstances.map((y) => ({
+        id: y.id, type: y.yagnaType, title: y.title, kundCount: y.kundCount,
+        sessions: y.sessions
+      }))
     }))
   });
 }

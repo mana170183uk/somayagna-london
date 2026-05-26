@@ -2,10 +2,11 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { getAdminFromCookies } from '@/lib/auth';
-import { formatDateLong, formatGBP, formatTime, SESSION_CAPACITY } from '@/lib/constants';
+import { formatDateLong, formatGBP, formatTime } from '@/lib/constants';
 import { Mandala } from '@/components/ui/Ornaments';
 import { paletteForDate, paletteForSession } from '@/lib/dayColors';
 import { SessionIcon } from '@/components/ui/SessionIcon';
+import SessionToggle from '@/components/admin/SessionToggle';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,14 +17,18 @@ export default async function AdminHome() {
   const [days, totals, recent, byProvider] = await Promise.all([
     prisma.eventDay.findMany({
       orderBy: { date: 'asc' },
-      where: { isActive: true },
       include: {
-        sessions: {
-          orderBy: { startTime: 'asc' },
+        yagnaInstances: {
+          orderBy: { yagnaType: 'asc' },
           include: {
-            bookings: {
-              where: { status: 'CONFIRMED' },
-              select: { positions: true, amountPence: true, donationPence: true, giftAid: true }
+            sessions: {
+              orderBy: { startTime: 'asc' },
+              include: {
+                bookings: {
+                  where: { status: 'CONFIRMED' },
+                  select: { positions: true, amountPence: true, donationPence: true, giftAid: true }
+                }
+              }
             }
           }
         }
@@ -45,7 +50,12 @@ export default async function AdminHome() {
       select: {
         id: true, reference: true, primaryName: true, kundNumber: true, positions: true,
         amountPence: true, donationPence: true, confirmedAt: true,
-        session: { select: { startTime: true, eventDay: { select: { date: true, title: true } } } },
+        session: {
+          select: {
+            startTime: true,
+            yagnaInstance: { select: { title: true, eventDay: { select: { date: true } } } }
+          }
+        },
         payment: { select: { provider: true } }
       }
     }),
@@ -60,16 +70,22 @@ export default async function AdminHome() {
   const [bookingCount, sums, giftAidCount, holdCount] = totals;
   const revenuePence = sums._sum.amountPence ?? 0;
   const donationPence = sums._sum.donationPence ?? 0;
-  const totalCapacity = days.length * 3 * SESSION_CAPACITY; // 7 * 3 * 33 = 693
+
+  // Per-yagna capacity (Pitru 9×3, others 11×3). Sum across all enabled sessions.
+  const totalCapacity = days.reduce(
+    (acc, d) => acc + d.yagnaInstances.reduce(
+      (a, y) => a + y.sessions.filter((s) => s.enabled).length * y.kundCount * 3, 0
+    ), 0
+  );
   const totalTaken = days.reduce(
-    (acc, d) => acc + d.sessions.reduce((a, s) => a + s.bookings.reduce((x, b) => x + b.positions.length, 0), 0),
-    0
+    (acc, d) => acc + d.yagnaInstances.reduce(
+      (a, y) => a + y.sessions.reduce((x, s) => x + s.bookings.reduce((c, b) => c + b.positions.length, 0), 0), 0
+    ), 0
   );
   const fillPct = totalCapacity > 0 ? Math.round((totalTaken / totalCapacity) * 100) : 0;
 
   return (
     <div>
-      {/* Hero header */}
       <header className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-maroon-800 via-maroon-700 to-maroon-900 text-ivory-50 p-7 md:p-9 shadow-altar">
         <Mandala className="absolute -right-20 -top-20 w-72 text-gold-400 opacity-20 animate-slow-spin pointer-events-none" />
         <Mandala className="absolute -left-24 -bottom-28 w-64 text-gold-300 opacity-15 animate-slow-spin pointer-events-none" />
@@ -85,7 +101,6 @@ export default async function AdminHome() {
           </div>
         </div>
 
-        {/* Big number — overall fill */}
         <div className="relative mt-7 grid md:grid-cols-12 items-center gap-6">
           <div className="md:col-span-5">
             <div className="text-[11px] tracking-widest uppercase text-gold-200/90">Programme fill</div>
@@ -105,7 +120,6 @@ export default async function AdminHome() {
         </div>
       </header>
 
-      {/* Payment provider breakdown */}
       {byProvider.length > 0 && (
         <section className="mt-6 grid sm:grid-cols-3 gap-3">
           {byProvider.map((p) => (
@@ -122,7 +136,6 @@ export default async function AdminHome() {
         </section>
       )}
 
-      {/* Recent confirmations */}
       {recent.length > 0 && (
         <section className="mt-6 card p-5">
           <div className="flex items-center justify-between mb-4">
@@ -133,19 +146,17 @@ export default async function AdminHome() {
           </div>
           <ul className="divide-y divide-gold-100">
             {recent.map((b) => {
-              const dayPalette = paletteForDate(b.session.eventDay.date);
+              const dayPalette = paletteForDate(b.session.yagnaInstance.eventDay.date);
               return (
                 <li key={b.id} className="py-2.5 grid grid-cols-12 gap-3 items-center text-sm">
                   <span className="col-span-2 font-mono text-[11px] text-maroon-700">{b.reference}</span>
                   <span className="col-span-3 text-maroon-900 font-medium truncate">{b.primaryName}</span>
-                  <span className={`col-span-3 inline-flex items-center gap-2 truncate`}>
+                  <span className="col-span-3 inline-flex items-center gap-2 truncate">
                     <span className={`inline-block w-2.5 h-2.5 rounded-full flex-shrink-0 ${dayPalette.border.replace('border-', 'bg-')}`} title={dayPalette.name} />
-                    <span className="text-maroon-900 font-medium truncate">
-                      {formatDateLong(b.session.eventDay.date)}
-                    </span>
+                    <span className="text-maroon-900 font-medium truncate">{formatDateLong(b.session.yagnaInstance.eventDay.date)}</span>
                   </span>
                   <span className="col-span-2 text-maroon-700/90 truncate">
-                    Kund {b.kundNumber} · {b.positions.join(',')} · {formatTime(b.session.startTime)}
+                    {b.session.yagnaInstance.title.replace(' Yagna', '')} · K{b.kundNumber} · {b.positions.join(',')} · {formatTime(b.session.startTime)}
                   </span>
                   <span className="col-span-1 text-maroon-900 tabular-nums text-right">
                     {formatGBP(b.amountPence + b.donationPence)}
@@ -159,22 +170,32 @@ export default async function AdminHome() {
         </section>
       )}
 
-      {/* Per-day cards */}
-      <h2 className="h-display text-xl text-maroon-800 mt-8 mb-3">Days & sessions</h2>
+      {/* Per-day cards — each day now has multiple yagnas */}
+      <h2 className="h-display text-xl text-maroon-800 mt-8 mb-3">Days, yagnas & sessions</h2>
       <div className="space-y-6">
         {days.map((d) => {
-          const dayTaken = d.sessions.reduce((acc, s) => acc + s.bookings.reduce((x, b) => x + b.positions.length, 0), 0);
-          const dayRev = d.sessions.reduce((acc, s) => acc + s.bookings.reduce((x, b) => x + b.amountPence, 0), 0);
-          const dayDon = d.sessions.reduce((acc, s) => acc + s.bookings.reduce((x, b) => x + b.donationPence, 0), 0);
-          const dayCap = d.sessions.length * SESSION_CAPACITY;
-          const dayPct = dayCap > 0 ? Math.round((dayTaken / dayCap) * 100) : 0;
           const palette = paletteForDate(d.date);
+          const dayTaken = d.yagnaInstances.reduce(
+            (acc, y) => acc + y.sessions.reduce((a, s) => a + s.bookings.reduce((x, b) => x + b.positions.length, 0), 0), 0
+          );
+          const dayCap = d.yagnaInstances.reduce(
+            (acc, y) => acc + y.sessions.filter((s) => s.enabled).length * y.kundCount * 3, 0
+          );
+          const dayRev = d.yagnaInstances.reduce(
+            (acc, y) => acc + y.sessions.reduce((a, s) => a + s.bookings.reduce((x, b) => x + b.amountPence, 0), 0), 0
+          );
+          const dayDon = d.yagnaInstances.reduce(
+            (acc, y) => acc + y.sessions.reduce((a, s) => a + s.bookings.reduce((x, b) => x + b.donationPence, 0), 0), 0
+          );
+          const dayPct = dayCap > 0 ? Math.round((dayTaken / dayCap) * 100) : 0;
           return (
             <section key={d.id} className={`card overflow-hidden border-l-4 ${palette.border}`}>
               <div className={`px-5 py-4 border-b border-gold-200 flex flex-wrap justify-between items-baseline gap-2 ${palette.bg}`}>
                 <div>
-                  <div className={`text-xs tracking-widest uppercase ${palette.accentText}`}>{d.yagnaType.replace('_', ' ')}</div>
-                  <div className="h-display text-2xl text-maroon-800">{formatDateLong(d.date)} — {d.title}</div>
+                  <div className={`text-xs tracking-widest uppercase ${palette.accentText}`}>
+                    {d.yagnaInstances.map((y) => y.title).join(' · ')}
+                  </div>
+                  <div className="h-display text-2xl text-maroon-800">{formatDateLong(d.date)}</div>
                 </div>
                 <div className="text-right">
                   <div className="text-xs uppercase tracking-widest text-maroon-700">Day total</div>
@@ -185,43 +206,68 @@ export default async function AdminHome() {
               <div className="px-5 pt-3">
                 <ProgressBar pct={dayPct} compact />
               </div>
-              <div className="divide-y divide-gold-100 mt-2">
-                {d.sessions.map((s) => {
-                  const taken = s.bookings.reduce((acc, b) => acc + b.positions.length, 0);
-                  const remaining = SESSION_CAPACITY - taken;
-                  const revenue = s.bookings.reduce((acc, b) => acc + b.amountPence, 0);
-                  const donations = s.bookings.reduce((acc, b) => acc + b.donationPence, 0);
-                  const sPct = Math.round((taken / SESSION_CAPACITY) * 100);
-                  const sPalette = paletteForSession(s.startTime);
+
+              {/* Each yagna runs as a sub-section */}
+              <div className="divide-y divide-gold-200/60 mt-2">
+                {d.yagnaInstances.map((y) => {
+                  const yTaken = y.sessions.reduce((a, s) => a + s.bookings.reduce((x, b) => x + b.positions.length, 0), 0);
+                  const yCap = y.sessions.filter((s) => s.enabled).length * y.kundCount * 3;
+                  const yRev = y.sessions.reduce((a, s) => a + s.bookings.reduce((x, b) => x + b.amountPence, 0), 0);
                   return (
-                    <Link
-                      key={s.id} href={`/admin/session/${s.id}`}
-                      className="relative grid grid-cols-12 gap-3 items-center px-5 py-4 hover:bg-ivory-100 transition group"
-                    >
-                      {/* Session palette stripe on the left edge */}
-                      <span className={`absolute left-0 top-0 bottom-0 w-1 ${sPalette.border.replace('border-', 'bg-')}`} />
-                      <div className="col-span-3 flex items-center gap-2.5">
-                        <span className={`inline-flex items-center justify-center w-9 h-9 rounded-full ${sPalette.bg} ${sPalette.accentText}`}>
-                          <SessionIcon kind={sPalette.icon} className="w-5 h-5" />
-                        </span>
-                        <div>
-                          <div className={`text-[10px] uppercase tracking-widest font-semibold ${sPalette.accentText}`}>{sPalette.label}</div>
-                          <div className="h-display text-lg text-maroon-800 group-hover:text-saffron-700 transition leading-none">{formatTime(s.startTime)}</div>
+                    <div key={y.id}>
+                      <div className="px-5 py-2.5 bg-ivory-100/60 flex items-baseline justify-between">
+                        <div className="flex items-baseline gap-3">
+                          <span className="text-[10px] tracking-widest uppercase font-semibold text-maroon-800">{y.title}</span>
+                          <span className="text-xs text-maroon-700">{y.kundCount} Kunds · {y.sessions.length} session{y.sessions.length === 1 ? '' : 's'}</span>
                         </div>
+                        <span className="text-xs text-maroon-700 tabular-nums">
+                          {yTaken}/{yCap} · {formatGBP(yRev)}
+                        </span>
                       </div>
-                      <div className="col-span-2 text-sm text-maroon-900">
-                        <div className="font-medium text-maroon-800">{taken}<span className="text-maroon-700/80">/{SESSION_CAPACITY}</span> taken</div>
-                        <div className="text-xs text-maroon-700">{remaining} free</div>
+                      <div className="divide-y divide-gold-100">
+                        {y.sessions.map((s) => {
+                          const taken = s.bookings.reduce((acc, b) => acc + b.positions.length, 0);
+                          const sCap = y.kundCount * 3;
+                          const remaining = sCap - taken;
+                          const revenue = s.bookings.reduce((acc, b) => acc + b.amountPence, 0);
+                          const donations = s.bookings.reduce((acc, b) => acc + b.donationPence, 0);
+                          const sPct = sCap > 0 ? Math.round((taken / sCap) * 100) : 0;
+                          const sPalette = paletteForSession(s.startTime);
+                          return (
+                            <div key={s.id} className={`relative grid grid-cols-12 gap-3 items-center px-5 py-4 group ${s.enabled ? 'hover:bg-ivory-100' : 'opacity-60'} transition`}>
+                              <span className={`absolute left-0 top-0 bottom-0 w-1 ${sPalette.border.replace('border-', 'bg-')}`} />
+                              <Link href={`/admin/session/${s.id}`} className="col-span-3 flex items-center gap-2.5">
+                                <span className={`inline-flex items-center justify-center w-9 h-9 rounded-full ${sPalette.bg} ${sPalette.accentText}`}>
+                                  <SessionIcon kind={sPalette.icon} className="w-5 h-5" />
+                                </span>
+                                <div>
+                                  <div className={`text-[10px] uppercase tracking-widest font-semibold ${sPalette.accentText}`}>
+                                    {sPalette.label}
+                                    {s.optional && <span className="ml-2 text-maroon-700">· optional</span>}
+                                  </div>
+                                  <div className="h-display text-lg text-maroon-800 group-hover:text-saffron-700 transition leading-none">{formatTime(s.startTime)}</div>
+                                </div>
+                              </Link>
+                              <div className="col-span-2 text-sm text-maroon-900">
+                                <div className="font-medium text-maroon-800">{taken}<span className="text-maroon-700/80">/{sCap}</span> taken</div>
+                                <div className="text-xs text-maroon-700">{remaining} free</div>
+                              </div>
+                              <div className="col-span-3">
+                                <ProgressBar pct={sPct} compact />
+                              </div>
+                              <div className="col-span-2 text-sm text-maroon-900 tabular-nums text-right">
+                                {formatGBP(revenue)}
+                                {donations > 0 && <div className="text-[10px] text-saffron-700">+ {formatGBP(donations)} ♥</div>}
+                              </div>
+                              <div className="col-span-2 flex items-center justify-end gap-2">
+                                {s.optional && <SessionToggle id={s.id} enabled={s.enabled} />}
+                                <Link href={`/admin/session/${s.id}`} className="text-saffron-700">→</Link>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                      <div className="col-span-4">
-                        <ProgressBar pct={sPct} compact />
-                      </div>
-                      <div className="col-span-2 text-sm text-maroon-900 tabular-nums text-right">
-                        {formatGBP(revenue)}
-                        {donations > 0 && <div className="text-[10px] text-saffron-700">+ {formatGBP(donations)} ♥</div>}
-                      </div>
-                      <div className="col-span-1 text-right text-saffron-700 group-hover:translate-x-0.5 transition">→</div>
-                    </Link>
+                    </div>
                   );
                 })}
               </div>

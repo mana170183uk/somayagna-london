@@ -6,7 +6,7 @@ export const positionLabelSchema = z.enum(POSITION_LABELS as unknown as [string,
 export const createHoldSchema = z.object({
   sessionId: z.string().min(1),
   bookingType: z.enum(['SINGLE_POSITION', 'FULL_KUND']),
-  kundNumber: z.number().int().min(1).max(11),
+  kundNumber: z.number().int().min(1).max(13),   // server enforces real per-yagna cap (Pitru 9, Purshotam/Vishnu Gopal 11, optional 13)
   positions: z.array(positionLabelSchema).min(1).max(3),
   email: z.string().email(),
   primaryName: z.string().min(2)
@@ -52,7 +52,7 @@ export const adminEditBookingSchema = z.object({
 export const adminCreateBookingSchema = z.object({
   sessionId: z.string(),
   bookingType: z.enum(['SINGLE_POSITION', 'FULL_KUND']),
-  kundNumber: z.number().int().min(1).max(11),
+  kundNumber: z.number().int().min(1).max(13),    // server enforces real per-yagna cap
   positions: z.array(positionLabelSchema).min(1).max(3),
   primaryName: z.string().min(2),
   relation: z.enum(['COUPLE', 'SIBLING', 'INDIVIDUAL']),

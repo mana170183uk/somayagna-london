@@ -51,12 +51,12 @@ export async function POST(req: NextRequest) {
         donationPence,
         payment: { provider: 'STRIPE', providerRef: s.id, status: 'SUCCEEDED', raw: s }
       });
-      const full = await prisma.booking.findUnique({ where: { id: booking.id }, include: { session: { include: { eventDay: true } } } });
+      const full = await prisma.booking.findUnique({ where: { id: booking.id }, include: { session: { include: { yagnaInstance: { include: { eventDay: true } } } } } });
       if (full && full.email) {
         await sendConfirmationEmail({
           to: full.email, primaryName: full.primaryName, reference: full.reference,
-          date: full.session.eventDay.date, startTime: full.session.startTime,
-          yagnaType: full.session.eventDay.title, kundNumber: full.kundNumber,
+          date: full.session.yagnaInstance.eventDay.date, startTime: full.session.startTime,
+          yagnaType: full.session.yagnaInstance.title, kundNumber: full.kundNumber,
           positions: full.positions, bookingType: full.bookingType, amountPence: full.amountPence,
           donationPence: full.donationPence
         });

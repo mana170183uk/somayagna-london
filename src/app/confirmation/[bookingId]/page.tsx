@@ -10,7 +10,7 @@ export default async function Confirmation({ params }: { params: Promise<{ booki
   const { bookingId } = await params;
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
-    include: { session: { include: { eventDay: true } }, payment: true }
+    include: { session: { include: { yagnaInstance: { include: { eventDay: true } } } }, payment: true }
   });
   if (!booking) notFound();
 
@@ -40,8 +40,8 @@ export default async function Confirmation({ params }: { params: Promise<{ booki
           </div>
 
           <div className="p-8 md:p-10 space-y-4">
-            <Row k="Yagna" v={booking.session.eventDay.title} />
-            <Row k="Date" v={formatDateLong(booking.session.eventDay.date)} />
+            <Row k="Yagna" v={booking.session.yagnaInstance.title} />
+            <Row k="Date" v={formatDateLong(booking.session.yagnaInstance.eventDay.date)} />
             <Row k="Session" v={`${booking.session.label} · ${formatTime(booking.session.startTime)}`} />
             <Row k="Kund" v={`Kund ${booking.kundNumber}`} />
             <Row k="Position" v={typeLabel} />

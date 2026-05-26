@@ -8,7 +8,7 @@ export async function GET() {
 
   const bookings = await prisma.booking.findMany({
     orderBy: [{ createdAt: 'desc' }],
-    include: { session: { include: { eventDay: true } }, payment: true }
+    include: { session: { include: { yagnaInstance: { include: { eventDay: true } } } }, payment: true }
   });
 
   const header = [
@@ -21,8 +21,8 @@ export async function GET() {
   ];
   const rows = bookings.map((b) => [
     b.reference, b.status,
-    b.session.eventDay.date.toISOString().slice(0,10), b.session.startTime,
-    b.session.eventDay.title, b.kundNumber, b.positions.join('|'),
+    b.session.yagnaInstance.eventDay.date.toISOString().slice(0,10), b.session.startTime,
+    b.session.yagnaInstance.title, b.kundNumber, b.positions.join('|'),
     b.bookingType,
     (b.amountPence/100).toFixed(2),
     (b.donationPence/100).toFixed(2),

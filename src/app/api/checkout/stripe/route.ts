@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
 
   const hold = await prisma.bookingHold.findUnique({
     where: { id: parsed.data.holdId },
-    include: { session: { include: { eventDay: true } } }
+    include: { session: { include: { yagnaInstance: { include: { eventDay: true } } } } }
   });
   if (!hold) return NextResponse.json({ error: 'HOLD_NOT_FOUND' }, { status: 404 });
   if (hold.expiresAt < new Date()) return NextResponse.json({ error: 'HOLD_EXPIRED' }, { status: 410 });
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
   });
 
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
-  const desc = `${hold.session.eventDay.title} — Kund ${hold.kundNumber} (${hold.positions.join(',')})`;
+  const desc = `${hold.session.yagnaInstance.title} — Kund ${hold.kundNumber} (${hold.positions.join(',')})`;
   const session = await createStripeCheckoutSession({
     holdId: hold.id,
     amountPence: hold.amountPence,

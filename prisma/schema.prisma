@@ -11,9 +11,9 @@ datasource db {
 }
 
 enum YagnaType {
-  WELCOME           // 14 June — info only
-  PURSHOTAM         // 15 June
+  PURSHOTAM         // 14, 15 June
   VISHNU_GOPAL      // 16–21 June
+  PITRU             // every active day
 }
 
 enum BookingType {
@@ -50,31 +50,46 @@ enum Relation {
 }
 
 model EventDay {
-  id          String     @id @default(cuid())
-  date        DateTime   @unique          // midnight UTC of the event day
-  yagnaType   YagnaType
-  title       String                       // e.g. "Purshotam Yagna"
-  description String?    @db.Text
-  isActive    Boolean    @default(true)    // 14 June -> false (no booking)
-  sessions    Session[]
-  createdAt   DateTime   @default(now())
+  id             String          @id @default(cuid())
+  date           DateTime        @unique          // midnight UTC of the event day
+  description    String?         @db.Text
+  yagnaInstances YagnaInstance[]
+  createdAt      DateTime        @default(now())
 
   @@index([date])
 }
 
-model Session {
-  id          String     @id @default(cuid())
+// One yagna running on a given day (e.g. Mon 15 = Purshotam + Pitru = 2 instances).
+// Each YagnaInstance has its OWN Kund inventory (Pitru's 9 Kunds ≠ Vishnu Gopal's 11 Kunds).
+model YagnaInstance {
+  id          String    @id @default(cuid())
   eventDayId  String
-  eventDay    EventDay   @relation(fields: [eventDayId], references: [id], onDelete: Cascade)
-  startTime   String     // "10:15", "14:15", "16:15"  (24h, Europe/London)
-  label       String     // "Morning", "Afternoon I", "Afternoon II"
-  kunds       Kund[]
-  bookings    Booking[]
-  holds       BookingHold[]
-  createdAt   DateTime   @default(now())
+  eventDay    EventDay  @relation(fields: [eventDayId], references: [id], onDelete: Cascade)
+  yagnaType   YagnaType
+  title       String                          // human-friendly e.g. "Pitru Yagna"
+  kundCount   Int                             // 11 (Purshotam/Vishnu Gopal) or 9 (Pitru)
+  sessions    Session[]
+  createdAt   DateTime  @default(now())
 
-  @@unique([eventDayId, startTime])
+  @@unique([eventDayId, yagnaType])
   @@index([eventDayId])
+}
+
+model Session {
+  id                String         @id @default(cuid())
+  yagnaInstanceId   String
+  yagnaInstance     YagnaInstance  @relation(fields: [yagnaInstanceId], references: [id], onDelete: Cascade)
+  startTime         String                          // "10:15" (24h, Europe/London)
+  label             String                          // "Morning", "Late Morning", etc.
+  optional          Boolean        @default(false)  // 'if there is demand' sessions per SM doc
+  enabled           Boolean        @default(true)   // admin can disable to hide from public booking page
+  kunds             Kund[]
+  bookings          Booking[]
+  holds             BookingHold[]
+  createdAt         DateTime       @default(now())
+
+  @@unique([yagnaInstanceId, startTime])
+  @@index([yagnaInstanceId])
 }
 
 model Kund {

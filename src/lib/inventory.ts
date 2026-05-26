@@ -14,9 +14,9 @@
  *   - cancelBooking(bookingId, reason)   → admin action
  *   - adminCreateConfirmedBooking(...)   → manual add (skips payment)
  */
-import { Prisma, BookingStatus, BookingType, PaymentProvider, PaymentStatus, Relation } from '@prisma/client';
+import { Prisma, BookingStatus, BookingType, PaymentProvider, PaymentStatus, Relation, YagnaType } from '@prisma/client';
 import { prisma } from './prisma';
-import { HOLD_MS, POSITION_LABELS, PRICE_FULL_KUND_PENCE, PRICE_SINGLE_PENCE, PositionLabel, SESSION_CAPACITY } from './constants';
+import { HOLD_MS, POSITION_LABELS, PRICE_FULL_KUND_PENCE, PRICE_SINGLE_PENCE, PositionLabel } from './constants';
 import { bookingReference } from './utils';
 
 export type PositionState = 'FREE' | 'HELD' | 'BOOKED' | 'BLOCKED';
@@ -39,7 +39,10 @@ export interface SessionAvailability {
   date: string;             // ISO yyyy-mm-dd
   startTime: string;        // "10:15"
   remaining: number;        // free positions
-  capacity: number;         // 33
+  capacity: number;         // 33 (11 Kunds × 3) or 27 (Pitru's 9 Kunds × 3)
+  kundCount: number;        // 11 or 9
+  yagnaType: YagnaType;
+  yagnaTitle: string;
   kunds: KundView[];
 }
 
@@ -51,7 +54,7 @@ export async function getSessionAvailability(sessionId: string): Promise<Session
   const session = await prisma.session.findUnique({
     where: { id: sessionId },
     include: {
-      eventDay: true,
+      yagnaInstance: { include: { eventDay: true } },
       kunds: {
         orderBy: { number: 'asc' },
         include: {
@@ -92,12 +95,16 @@ export async function getSessionAvailability(sessionId: string): Promise<Session
     };
   });
 
+  const yi = session.yagnaInstance;
   return {
     sessionId: session.id,
-    date: session.eventDay.date.toISOString().slice(0, 10),
+    date: yi.eventDay.date.toISOString().slice(0, 10),
     startTime: session.startTime,
     remaining,
-    capacity: SESSION_CAPACITY,
+    capacity: yi.kundCount * 3,
+    kundCount: yi.kundCount,
+    yagnaType: yi.yagnaType,
+    yagnaTitle: yi.title,
     kunds
   };
 }
@@ -135,11 +142,17 @@ export async function createHold(args: CreateHoldArgs) {
   return prisma.$transaction(async (tx) => {
     const session = await tx.session.findUnique({
       where: { id: args.sessionId },
-      include: { eventDay: true, kunds: { where: { number: args.kundNumber }, include: { positions: true } } }
+      include: {
+        yagnaInstance: { include: { eventDay: true } },
+        kunds: { where: { number: args.kundNumber }, include: { positions: true } }
+      }
     });
     if (!session) throw new InventoryError('SESSION_NOT_FOUND', 'Session not found.');
-    if (!session.eventDay.isActive) throw new InventoryError('INVALID_REQUEST', 'This day is not open for booking.');
+    if (!session.enabled) throw new InventoryError('INVALID_REQUEST', 'This session is not open for booking yet.');
 
+    if (args.kundNumber < 1 || args.kundNumber > session.yagnaInstance.kundCount) {
+      throw new InventoryError('INVALID_REQUEST', `Kund ${args.kundNumber} does not exist for this yagna (only Kunds 1–${session.yagnaInstance.kundCount}).`);
+    }
     const kund = session.kunds[0];
     if (!kund) throw new InventoryError('INVALID_REQUEST', `Kund ${args.kundNumber} does not exist in this session.`);
 
