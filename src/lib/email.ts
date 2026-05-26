@@ -61,13 +61,22 @@ function renderHtml(i: ConfirmEmailInput) {
   const positions = i.positions.join(', ');
   const typeLabel = i.bookingType === 'FULL_KUND' ? 'Full Kund (positions A, B & C)' : `Single Position (${positions})`;
   return `<!doctype html>
-<html><body style="margin:0;background:#FBF5E7;font-family:Georgia,serif;color:#400F0F;">
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light only">
+  <meta name="supported-color-schemes" content="light only">
+  <title>${escapeHtml(EVENT.name)} reservation</title>
+</head>
+<body style="margin:0;background:#FBF5E7;font-family:Georgia,serif;color:#400F0F;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#FBF5E7;padding:32px 0;">
 <tr><td align="center">
   <table width="560" cellpadding="0" cellspacing="0" style="background:#FFFCF6;border-radius:12px;overflow:hidden;border:1px solid #EFD68C;">
-    <tr><td style="background:linear-gradient(180deg,#8B2727,#561414);color:#F8EBC4;padding:28px 32px;text-align:center;">
-      <div style="font-size:14px;letter-spacing:.3em;text-transform:uppercase;opacity:.85;">SomaYagna London</div>
-      <div style="font-size:24px;margin-top:8px;">Your seat is reserved</div>
+    <tr><td style="background:#8B2727;color:#FFFFFF;padding:32px;text-align:center;">
+      <div style="font-size:13px;letter-spacing:.4em;text-transform:uppercase;color:#FFE08A;font-weight:bold;">SomaYagna London</div>
+      <div style="font-size:28px;margin-top:10px;color:#FFFFFF;font-weight:bold;">Your seat is reserved</div>
+      <div style="font-size:13px;margin-top:8px;color:#FFE08A;">Booking confirmed ✓</div>
     </td></tr>
     <tr><td style="padding:28px 32px 8px 32px;font-size:16px;line-height:1.55;">
       Namaste ${escapeHtml(i.primaryName)},<br><br>
