@@ -6,7 +6,7 @@ import { classNames } from '@/lib/utils';
 import { paletteForSession } from '@/lib/dayColors';
 import { SessionIcon } from '@/components/ui/SessionIcon';
 
-interface PositionView { id: string; label: 'A' | 'B' | 'C'; state: 'FREE' | 'HELD' | 'BOOKED'; }
+interface PositionView { id: string; label: 'A' | 'B' | 'C'; state: 'FREE' | 'HELD' | 'BOOKED' | 'BLOCKED'; }
 interface KundView { id: string; number: number; positions: PositionView[]; fullyFree: boolean; }
 interface Availability {
   sessionId: string; date: string; startTime: string;

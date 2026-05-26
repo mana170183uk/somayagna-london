@@ -294,11 +294,17 @@ function VishnuGopalSection() {
 
 /* ─────────────────────────  HOW BOOKING WORKS ───────────────────────── */
 
-const STEPS = [
-  ['Choose a date', 'Pick any active day between 15 – 21 June.'],
-  ['Choose a session', 'Three timings each day: 10:15 AM, 2:15 PM or 4:15 PM.'],
-  ['Pick a Kund & position', 'See live availability of all 11 Kunds and positions A, B, C.'],
-  ['Register & pay', 'Provide your details and pay securely in GBP. Your seat is held for 10 minutes during checkout.']
+const STEPS: Array<[string, string, { bg: string; border: string; ring: string; accent: string; stripe: string; emoji: string }]> = [
+  ['Choose a date', 'Pick any day between 14 – 21 June.',
+    { bg: 'bg-amber-100', border: 'border-amber-300', ring: 'ring-amber-400', accent: 'text-amber-800', stripe: 'bg-amber-400', emoji: '📅' }],
+  ['Choose a yagna', 'Each day runs one or more sacred yagnas — Purshotam, Vishnu Gopal, and Pitru.',
+    { bg: 'bg-rose-100', border: 'border-rose-300', ring: 'ring-rose-400', accent: 'text-rose-800', stripe: 'bg-rose-400', emoji: '🕉' }],
+  ['Choose a session time', 'Each yagna offers its own sittings throughout the day.',
+    { bg: 'bg-sky-100', border: 'border-sky-300', ring: 'ring-sky-400', accent: 'text-sky-800', stripe: 'bg-sky-400', emoji: '⏱' }],
+  ['Pick a Kund & position', 'Live availability — positions A, B, C around each sacred fire altar.',
+    { bg: 'bg-emerald-100', border: 'border-emerald-300', ring: 'ring-emerald-400', accent: 'text-emerald-800', stripe: 'bg-emerald-400', emoji: '🔥' }],
+  ['Register & pay', 'Your details, optional Gift Aid donation, and secure GBP payment. Seat held for 10 minutes during checkout.',
+    { bg: 'bg-violet-100', border: 'border-violet-300', ring: 'ring-violet-400', accent: 'text-violet-800', stripe: 'bg-violet-400', emoji: '💳' }]
 ];
 
 function HowBookingWorks() {
@@ -307,14 +313,21 @@ function HowBookingWorks() {
       <div className="container-tight">
         <div className="max-w-3xl mb-12">
           <p className="eyebrow mb-3">How booking works</p>
-          <h2 className="h-display text-4xl md:text-5xl text-maroon-800">Reserve your seva in four simple steps</h2>
+          <h2 className="h-display text-4xl md:text-5xl text-maroon-800">Reserve your seva in five simple steps</h2>
         </div>
-        <ol className="grid md:grid-cols-4 gap-4">
-          {STEPS.map(([title, body], i) => (
-            <li key={title} className="card p-6 relative">
-              <div className="text-gold-500 text-sm tracking-widest">STEP {String(i + 1).padStart(2, '0')}</div>
-              <div className="h-display text-xl mt-2 text-maroon-800">{title}</div>
-              <p className="mt-2 text-sm text-maroon-900/90">{body}</p>
+        <ol className="grid md:grid-cols-5 gap-3">
+          {STEPS.map(([title, body, p], i) => (
+            <li
+              key={title}
+              className={`relative overflow-hidden rounded-2xl border-2 p-5 shadow-soft-gold/40 transition hover:-translate-y-1 hover:shadow-soft-gold ${p.bg} ${p.border}`}
+            >
+              <span className={`absolute top-0 left-0 right-0 h-1.5 ${p.stripe}`} />
+              <div className="flex items-center justify-between">
+                <div className={`text-[10px] tracking-widest font-semibold ${p.accent}`}>STEP {String(i + 1).padStart(2, '0')}</div>
+                <div className="text-xl" aria-hidden>{p.emoji}</div>
+              </div>
+              <div className="h-display text-lg mt-2 text-maroon-900 leading-tight">{title}</div>
+              <p className="mt-2 text-xs text-maroon-900 leading-relaxed">{body}</p>
             </li>
           ))}
         </ol>
@@ -469,28 +482,54 @@ function PriceCard({ title, subtitle, price, features, cta, href, highlight = fa
 
 /* ─────────────────────────  DAILY SCHEDULE ───────────────────────── */
 
+/* ─────────────────────────  DAILY SCHEDULE  ─────────────────────────
+ * Per SM doc: multiple yagnas run on each day with different session times.
+ * This section shows the per-yagna typical schedule. Admin can enable
+ * additional 'if there is demand' sessions through the dashboard.
+ */
+const SCHEDULE_YAGNAS: Array<{ title: string; dates: string; sessions: string[]; bg: string; border: string; ring: string; accent: string; stripe: string; icon: '☀' | '✦' | '🪔' }> = [
+  { title: 'Purshotam Yagna', dates: '14 – 15 June', sessions: ['11:00', '13:00'],
+    bg: 'bg-amber-100', border: 'border-amber-300', ring: 'ring-amber-400', accent: 'text-amber-800', stripe: 'bg-amber-400', icon: '☀' },
+  { title: 'Vishnu Gopal Yagna', dates: '16 – 21 June', sessions: ['08:30 (Sat/Sun)', '10:15', '12:15', '14:15', '16:15 (Sat)'],
+    bg: 'bg-rose-100', border: 'border-rose-300', ring: 'ring-rose-400', accent: 'text-rose-800', stripe: 'bg-rose-400', icon: '✦' },
+  { title: 'Pitru Yagna', dates: '14 – 21 June daily', sessions: ['10:15', '11:45', '13:15', '14:45', '16:15', '17:45'],
+    bg: 'bg-indigo-100', border: 'border-indigo-300', ring: 'ring-indigo-400', accent: 'text-indigo-800', stripe: 'bg-indigo-400', icon: '🪔' }
+];
+
 function DailySchedule() {
   return (
     <section id="schedule" className="section bg-temple-gradient">
       <div className="container-tight">
         <div className="text-center max-w-2xl mx-auto mb-10">
           <p className="eyebrow mb-3">Daily Schedule</p>
-          <h2 className="h-display text-4xl md:text-5xl text-maroon-800">Three sessions, every active day</h2>
-          <p className="mt-3 text-maroon-900/90">15 June onwards — same timings every day.</p>
+          <h2 className="h-display text-4xl md:text-5xl text-maroon-800">Multiple yagnas, every active day</h2>
+          <p className="mt-3 text-maroon-900/90">
+            From 14 June, several sacred yagnas run side by side. Pick the one closest to your intention — each has its own sittings.
+          </p>
         </div>
-        <div className="grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
-          {[
-            ['Morning', '10:15 AM'],
-            ['Afternoon I', '2:15 PM'],
-            ['Afternoon II', '4:15 PM']
-          ].map(([label, time]) => (
-            <div key={label} className="card p-6 text-center">
-              <div className="text-xs tracking-widest uppercase text-saffron-700">{label}</div>
-              <div className="h-display text-3xl mt-2 text-maroon-800">{time}</div>
-              <div className="text-xs text-maroon-900/85 mt-2">33 seats · 11 Kunds</div>
+        <div className="grid md:grid-cols-3 gap-4 max-w-5xl mx-auto">
+          {SCHEDULE_YAGNAS.map((y) => (
+            <div key={y.title} className={`relative overflow-hidden rounded-2xl border-2 p-6 shadow-soft-gold/40 transition hover:-translate-y-1 hover:shadow-soft-gold ${y.bg} ${y.border}`}>
+              <span className={`absolute top-0 left-0 right-0 h-1.5 ${y.stripe}`} />
+              <div className="flex items-center justify-between">
+                <span className={`text-[10px] tracking-widest font-semibold uppercase ${y.accent}`}>{y.dates}</span>
+                <span className="text-2xl" aria-hidden>{y.icon}</span>
+              </div>
+              <div className="h-display text-2xl mt-2 text-maroon-900">{y.title}</div>
+              <ul className="mt-4 space-y-1.5">
+                {y.sessions.map((s) => (
+                  <li key={s} className={`text-sm flex items-baseline gap-2 ${y.accent}`}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70 flex-shrink-0" />
+                    <span className="font-medium text-maroon-900 tabular-nums">{s}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           ))}
         </div>
+        <p className="text-center text-xs text-maroon-700 mt-6 max-w-2xl mx-auto">
+          Additional 'if there is demand' sittings may be enabled by the organising team. Check the booking page for the live schedule on your chosen day.
+        </p>
       </div>
     </section>
   );
