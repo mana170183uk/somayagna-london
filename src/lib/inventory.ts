@@ -225,7 +225,7 @@ export async function confirmBookingFromHold(args: ConfirmFromHoldArgs) {
   return prisma.$transaction(async (tx) => {
     const hold = await tx.bookingHold.findUnique({
       where: { id: args.holdId },
-      include: { heldPositions: true, session: { include: { eventDay: true } } }
+      include: { heldPositions: true }
     });
     if (!hold) throw new InventoryError('HOLD_NOT_FOUND', 'Hold no longer exists.');
     if (hold.expiresAt < new Date()) throw new InventoryError('HOLD_EXPIRED', 'Your reservation expired. Please book again.');
