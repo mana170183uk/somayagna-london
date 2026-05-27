@@ -7,6 +7,7 @@ import { Mandala } from '@/components/ui/Ornaments';
 import { paletteForDate, paletteForSession } from '@/lib/dayColors';
 import { SessionIcon } from '@/components/ui/SessionIcon';
 import SessionToggle from '@/components/admin/SessionToggle';
+import WipeBookingsButton from '@/components/admin/WipeBookingsButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -95,8 +96,9 @@ export default async function AdminHome() {
             <h1 className="h-display text-3xl md:text-4xl text-ivory-50">SomaYagna London — Live</h1>
             <p className="text-sm text-ivory-100/85 mt-1">Signed in as {admin.email}</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <a href="/api/admin/export" className="btn-secondary !bg-ivory-50/15 !text-ivory-50 !border-ivory-50/30 hover:!bg-ivory-50/25">↓ Export CSV</a>
+            <WipeBookingsButton />
             <Link href="/" className="btn-ghost !text-ivory-100 hover:!bg-ivory-50/10">View site</Link>
           </div>
         </div>
