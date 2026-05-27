@@ -37,8 +37,9 @@ export default function DonateClient({ materials, enabledProviders }: { material
   const [customAmount, setCustomAmount] = useState<string>('51');
   const [donor, setDonor] = useState({
     donorName: '', donorEmail: '', donorPhone: '',
+    donorAddress: '', donorPostcode: '',
     message: '', anonymous: false,
-    giftAid: false, giftAidAddress: '', giftAidPostcode: ''
+    giftAid: false
   });
   const [provider, setProvider] = useState<Provider>(() => (enabledProviders[0] as Provider) ?? 'mock');
   const [busy, setBusy] = useState(false);
@@ -56,7 +57,8 @@ export default function DonateClient({ materials, enabledProviders }: { material
     amountPence >= 100 &&
     donor.donorName.trim().length >= 2 &&
     /\S+@\S+\.\S+/.test(donor.donorEmail) &&
-    (!donor.giftAid || (donor.giftAidAddress.trim().length > 0 && donor.giftAidPostcode.trim().length > 0));
+    donor.donorAddress.trim().length > 0 &&
+    donor.donorPostcode.trim().length > 0;
 
   async function submit() {
     setBusy(true); setErr(null);
@@ -68,11 +70,11 @@ export default function DonateClient({ materials, enabledProviders }: { material
         donorName: donor.donorName,
         donorEmail: donor.donorEmail,
         donorPhone: donor.donorPhone || null,
+        donorAddress: donor.donorAddress,
+        donorPostcode: donor.donorPostcode,
         message: donor.message || null,
         anonymous: donor.anonymous,
         giftAid: donor.giftAid,
-        giftAidAddress: donor.giftAid ? donor.giftAidAddress : null,
-        giftAidPostcode: donor.giftAid ? donor.giftAidPostcode : null,
         provider
       };
       const endpoint = provider === 'mock' ? '/api/donations/mock' : '/api/donations/checkout';
@@ -177,6 +179,12 @@ export default function DonateClient({ materials, enabledProviders }: { material
                 </label>
               </div>
             </Field>
+            <Field label="Address" required full>
+              <input className="dinput" value={donor.donorAddress} onChange={(e) => setDonor({ ...donor, donorAddress: e.target.value })} placeholder="House / flat, street, town" required />
+            </Field>
+            <Field label="Postcode" required>
+              <input className="dinput uppercase" value={donor.donorPostcode} onChange={(e) => setDonor({ ...donor, donorPostcode: e.target.value.toUpperCase() })} required />
+            </Field>
             <Field label="A short dedication or message (optional)" full>
               <textarea rows={3} maxLength={500} className="dinput" placeholder="In memory of… / for the well-being of…"
                 value={donor.message} onChange={(e) => setDonor({ ...donor, message: e.target.value })} />
@@ -194,19 +202,11 @@ export default function DonateClient({ materials, enabledProviders }: { material
             <label htmlFor="giftaid" className="text-sm text-maroon-900">
               <span className="h-display text-xl text-maroon-800 block">Add 25% with Gift Aid</span>
               <span className="block mt-1 text-maroon-900/80">{GIFT_AID_DECLARATION}</span>
+              <span className="block mt-2 text-xs text-maroon-700/80">
+                HMRC will use the address and postcode above to verify your declaration.
+              </span>
             </label>
           </div>
-          {donor.giftAid && (
-            <div className="grid sm:grid-cols-2 gap-4 mt-4">
-              <Field label="UK home address" required>
-                <input className="dinput" value={donor.giftAidAddress} onChange={(e) => setDonor({ ...donor, giftAidAddress: e.target.value })} />
-              </Field>
-              <Field label="Postcode" required>
-                <input className="dinput" value={donor.giftAidPostcode} onChange={(e) => setDonor({ ...donor, giftAidPostcode: e.target.value })} />
-              </Field>
-              <p className="sm:col-span-2 text-xs text-maroon-700/80">HMRC requires your home address to verify a Gift Aid declaration.</p>
-            </div>
-          )}
         </div>
 
         {/* Provider + submit */}

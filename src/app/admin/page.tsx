@@ -8,6 +8,7 @@ import { paletteForDate, paletteForSession } from '@/lib/dayColors';
 import { SessionIcon } from '@/components/ui/SessionIcon';
 import SessionToggle from '@/components/admin/SessionToggle';
 import WipeBookingsButton from '@/components/admin/WipeBookingsButton';
+import WipeDonationsButton from '@/components/admin/WipeDonationsButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -119,6 +120,7 @@ export default async function AdminHome() {
             <a href="/api/admin/export" className="btn-secondary !bg-ivory-50/15 !text-ivory-50 !border-ivory-50/30 hover:!bg-ivory-50/25">↓ Bookings CSV</a>
             <a href="/api/admin/donations" className="btn-secondary !bg-ivory-50/15 !text-ivory-50 !border-ivory-50/30 hover:!bg-ivory-50/25">↓ Donations CSV</a>
             <WipeBookingsButton />
+            <WipeDonationsButton />
             <Link href="/" className="btn-ghost !text-ivory-100 hover:!bg-ivory-50/10">View site</Link>
           </div>
         </div>

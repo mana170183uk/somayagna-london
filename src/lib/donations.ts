@@ -23,11 +23,11 @@ interface CreatePendingDonationArgs {
   donorName: string;
   donorEmail: string;
   donorPhone?: string | null;
+  donorAddress: string;
+  donorPostcode: string;
   message?: string | null;
   anonymous?: boolean;
   giftAid?: boolean;
-  giftAidAddress?: string | null;
-  giftAidPostcode?: string | null;
 }
 
 const MIN_PENCE = 100;      // £1 minimum
@@ -44,8 +44,8 @@ export async function createPendingDonation(a: CreatePendingDonationArgs) {
     if (!m) throw new DonationError('INVALID_MATERIAL', `Unknown material: ${a.materialKey}`);
     materialLabel = m.label;
   }
-  if (a.giftAid && (!a.giftAidAddress || !a.giftAidPostcode)) {
-    throw new DonationError('INVALID_REQUEST', 'Gift Aid declaration requires a UK home address and postcode.');
+  if (!a.donorAddress?.trim() || !a.donorPostcode?.trim()) {
+    throw new DonationError('INVALID_REQUEST', 'An address and postcode are required.');
   }
 
   return prisma.donation.create({
@@ -61,8 +61,11 @@ export async function createPendingDonation(a: CreatePendingDonationArgs) {
       message: a.message ?? null,
       anonymous: a.anonymous ?? false,
       giftAid: a.giftAid ?? false,
-      giftAidAddress: a.giftAidAddress ?? null,
-      giftAidPostcode: a.giftAidPostcode ?? null,
+      // We reuse the Donation.giftAid* columns to store the always-required
+      // donor address (avoids a schema migration). HMRC verification of any
+      // Gift Aid declaration uses the same fields.
+      giftAidAddress: a.donorAddress.trim(),
+      giftAidPostcode: a.donorPostcode.trim(),
       status: 'PENDING_PAYMENT'
     }
   });

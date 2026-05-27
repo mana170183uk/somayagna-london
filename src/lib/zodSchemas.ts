@@ -73,10 +73,10 @@ export const donationCheckoutSchema = z.object({
   donorName: z.string().min(2).max(120),
   donorEmail: z.string().email(),
   donorPhone: z.string().max(40).optional().nullable(),
+  donorAddress: z.string().min(3).max(200),
+  donorPostcode: z.string().min(2).max(20),
   message: z.string().max(500).optional().nullable(),
   anonymous: z.boolean().optional(),
   giftAid: z.boolean().optional(),
-  giftAidAddress: z.string().max(200).optional().nullable(),
-  giftAidPostcode: z.string().max(20).optional().nullable(),
   provider: z.enum(['stripe', 'paypal', 'mock'])
 });
