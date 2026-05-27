@@ -37,22 +37,21 @@ function Header() {
         <Link href="/" className="group" aria-label="SomaYagna London — home">
           <Logo size="md" />
         </Link>
-        <nav className="hidden md:flex items-center gap-6 text-sm text-maroon-800">
+        <nav className="hidden lg:flex items-center gap-5 text-sm text-maroon-800 whitespace-nowrap">
           <a href="#timeline" className="hover:text-maroon-700">Programme</a>
           <a href="#booking" className="hover:text-maroon-700">How to book</a>
           <a href="#pricing" className="hover:text-maroon-700">Seva offerings</a>
           <a href="#schedule" className="hover:text-maroon-700">Schedule</a>
-          <Link href="/donate" className="hover:text-maroon-700">Donate or Seva</Link>
           <a href="#faq" className="hover:text-maroon-700">FAQ</a>
         </nav>
         <div className="flex items-center gap-2">
           <Link
             href="/donate"
-            className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-maroon-700 bg-ivory-50 text-maroon-800 px-4 py-2.5 text-sm font-medium hover:bg-maroon-50 hover:border-maroon-800 transition shadow-soft-gold/60 hidden sm:inline-flex"
+            className="hidden sm:inline-flex items-center justify-center gap-1.5 rounded-full bg-maroon-700 text-ivory-50 px-4 py-2.5 text-sm font-medium hover:bg-maroon-800 transition shadow-altar whitespace-nowrap"
           >
             <span aria-hidden>♥</span> Donate or Seva
           </Link>
-          <Link href="/book" className="btn-primary !py-2.5 !px-5 !text-sm">Book a Yagna</Link>
+          <Link href="/book" className="btn-primary !py-2.5 !px-5 !text-sm whitespace-nowrap">Book a Yagna</Link>
         </div>
       </div>
     </header>
