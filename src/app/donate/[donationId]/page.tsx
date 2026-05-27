@@ -6,8 +6,9 @@ import { Mandala, Diya, OmGlyph } from '@/components/ui/Ornaments';
 
 export const dynamic = 'force-dynamic';
 
-export default async function DonationConfirmation({ params }: { params: { donationId: string } }) {
-  const d = await prisma.donation.findUnique({ where: { id: params.donationId } });
+export default async function DonationConfirmation({ params }: { params: Promise<{ donationId: string }> }) {
+  const { donationId } = await params;
+  const d = await prisma.donation.findUnique({ where: { id: donationId } });
   if (!d) notFound();
 
   const giftAidPence = d.giftAid ? Math.round(d.amountPence * 0.25) : 0;
