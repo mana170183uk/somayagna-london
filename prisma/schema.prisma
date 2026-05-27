@@ -227,7 +227,7 @@ model AuditLog {
   @@index([createdAt])
 }
 
-/* ─────────────────────────  Donations  ───────────────────────── */
+// ─────────────────────────  Donations  ─────────────────────────
 
 enum DonationType {
   GENERAL          // free-text custom amount
