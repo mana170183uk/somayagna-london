@@ -42,12 +42,17 @@ function Header() {
           <a href="#booking" className="hover:text-maroon-700">How to book</a>
           <a href="#pricing" className="hover:text-maroon-700">Seva offerings</a>
           <a href="#schedule" className="hover:text-maroon-700">Schedule</a>
-          <Link href="/donate" className="hover:text-maroon-700">Donate</Link>
+          <Link href="/donate" className="hover:text-maroon-700">Donate or Seva</Link>
           <a href="#faq" className="hover:text-maroon-700">FAQ</a>
         </nav>
         <div className="flex items-center gap-2">
-          <Link href="/donate" className="btn-ghost !py-2.5 !px-4 !text-sm hidden sm:inline-flex">Donate</Link>
-          <Link href="/book" className="btn-primary !py-2.5 !px-5 !text-sm">Book a Seva</Link>
+          <Link
+            href="/donate"
+            className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-maroon-700 bg-ivory-50 text-maroon-800 px-4 py-2.5 text-sm font-medium hover:bg-maroon-50 hover:border-maroon-800 transition shadow-soft-gold/60 hidden sm:inline-flex"
+          >
+            <span aria-hidden>♥</span> Donate or Seva
+          </Link>
+          <Link href="/book" className="btn-primary !py-2.5 !px-5 !text-sm">Book a Yagna</Link>
         </div>
       </div>
     </header>
@@ -101,7 +106,7 @@ function Hero() {
 
         <div className="mt-10 flex flex-col sm:flex-row gap-3">
           <Link href="/book" className="btn-primary">
-            Book a Seva / Slot
+            Book a Yagna / Slot
             <span aria-hidden>→</span>
           </Link>
           <a href="#schedule" className="btn-secondary !bg-ivory-50/10 !text-ivory-50 !border-ivory-50/30 hover:!bg-ivory-50/20">
@@ -630,8 +635,8 @@ function Footer() {
           © {new Date().getFullYear()} {EVENT.organizer}
         </div>
         <div className="flex gap-4">
-          <Link href="/donate" className="hover:text-ivory-50">Donate</Link>
-          <Link href="/book" className="hover:text-ivory-50">Book a Seva</Link>
+          <Link href="/donate" className="hover:text-ivory-50">Donate or Seva</Link>
+          <Link href="/book" className="hover:text-ivory-50">Book a Yagna</Link>
           <a href="#" className="hover:text-ivory-50">Privacy</a>
           <a href="#" className="hover:text-ivory-50">Refund policy</a>
           <Link href="/admin" className="hover:text-ivory-50">Organiser login</Link>

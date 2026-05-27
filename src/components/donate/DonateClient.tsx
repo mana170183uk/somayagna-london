@@ -5,12 +5,23 @@ import { useRouter } from 'next/navigation';
 import { classNames } from '@/lib/utils';
 import { GIFT_AID_DECLARATION } from '@/lib/donation-copy';
 
+interface MaterialPalette {
+  bg: string;
+  border: string;
+  ring: string;
+  accent: string;
+  activeBg: string;
+  activeText: string;
+}
+
 interface Material {
   key: string;
   label: string;
   shortLabel: string;
   blurb: string;
   amountPence: number;
+  emoji: string;
+  palette: MaterialPalette;
 }
 
 type Provider = 'mock' | 'stripe' | 'paypal';
@@ -90,16 +101,22 @@ export default function DonateClient({ materials, enabledProviders }: { material
               const active = materialKey === m.key;
               return (
                 <button key={m.key} type="button" onClick={() => setMaterialKey(m.key)}
+                  aria-pressed={active}
                   className={classNames(
-                    'text-left rounded-2xl p-5 border transition',
-                    active ? 'bg-saffron-500 border-saffron-500 text-ivory-50 shadow-soft-gold' : 'bg-ivory-50 border-gold-300/50 hover:border-saffron-400 hover:shadow-soft-gold/50'
+                    'text-left rounded-2xl p-5 border-2 transition shadow-sm hover:shadow-soft-gold hover:-translate-y-0.5',
+                    active
+                      ? `${m.palette.activeBg} ${m.palette.border} ${m.palette.activeText} shadow-soft-gold ring-2 ${m.palette.ring}`
+                      : `${m.palette.bg} ${m.palette.border} ${m.palette.accent}`
                   )}
                 >
                   <div className="flex items-baseline justify-between gap-3">
-                    <div className="h-display text-lg leading-tight">{m.label}</div>
+                    <div className="flex items-center gap-2">
+                      <span aria-hidden className="text-2xl leading-none">{m.emoji}</span>
+                      <div className="h-display text-lg leading-tight">{m.label}</div>
+                    </div>
                     <div className="h-display text-2xl whitespace-nowrap">{gbp(m.amountPence)}</div>
                   </div>
-                  <p className={classNames('text-xs mt-2 leading-relaxed', active ? 'text-ivory-100/85' : 'text-maroon-900/65')}>
+                  <p className={classNames('text-xs mt-2 leading-relaxed', active ? 'text-ivory-50/90' : 'text-maroon-900/70')}>
                     {m.blurb}
                   </p>
                 </button>

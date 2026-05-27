@@ -21,14 +21,14 @@ export default function StickyCTA() {
           href="/donate"
           className="btn-secondary !px-4 !py-4 !bg-ivory-50 !border-maroon-700/40 hover:!bg-ivory-100 hidden sm:inline-flex"
         >
-          Donate
+          ♥ Donate or Seva
         </Link>
         <Link
           href="/book"
           className="btn-primary !px-6 !py-4 shadow-altar w-full sm:w-auto justify-center"
         >
           <span className="inline-block w-2 h-2 rounded-full bg-ivory-50 animate-flicker mr-1" />
-          Book a Seva / Slot
+          Book a Yagna / Slot
           <span aria-hidden>→</span>
         </Link>
       </div>

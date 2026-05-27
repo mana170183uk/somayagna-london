@@ -171,7 +171,7 @@ function Header() {
           <Link href="/#pricing" className="hover:text-maroon-700">Seva offerings</Link>
           <Link href="/donate" className="text-maroon-800 font-medium">Donate</Link>
         </nav>
-        <Link href="/book" className="btn-primary !py-2.5 !px-5 !text-sm">Book a Seva</Link>
+        <Link href="/book" className="btn-primary !py-2.5 !px-5 !text-sm">Book a Yagna</Link>
       </div>
     </header>
   );
