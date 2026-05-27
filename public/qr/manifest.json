@@ -1,0 +1,20 @@
+{
+  "generated": "build-time",
+  "domain": "https://somayagna.unityindivinity.com",
+  "codes": [
+    {
+      "key": "site-qr",
+      "url": "https://somayagna.unityindivinity.com/",
+      "png": "/qr/site-qr.png",
+      "svg": "/qr/site-qr.svg",
+      "purpose": "Display on other websites / printed materials to open the SomaYagna London homepage."
+    },
+    {
+      "key": "donate-qr",
+      "url": "https://somayagna.unityindivinity.com/donate",
+      "png": "/qr/donate-qr.png",
+      "svg": "/qr/donate-qr.svg",
+      "purpose": "Share / print so devotees can scan to open the Donate page directly."
+    }
+  ]
+}

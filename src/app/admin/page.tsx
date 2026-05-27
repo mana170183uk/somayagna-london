@@ -15,7 +15,7 @@ export default async function AdminHome() {
   const admin = await getAdminFromCookies();
   if (!admin) redirect('/admin/login');
 
-  const [days, totals, recent, byProvider] = await Promise.all([
+  const [days, totals, recent, byProvider, donationsByMaterial] = await Promise.all([
     prisma.eventDay.findMany({
       orderBy: { date: 'asc' },
       include: {
@@ -42,7 +42,17 @@ export default async function AdminHome() {
         _sum: { amountPence: true, donationPence: true }
       }),
       prisma.booking.count({ where: { status: 'CONFIRMED', giftAid: true } }),
-      prisma.bookingHold.count({ where: { expiresAt: { gt: new Date() }, booking: null } })
+      prisma.bookingHold.count({ where: { expiresAt: { gt: new Date() }, booking: null } }),
+      // Donations (standalone, via /donate)
+      prisma.donation.count({ where: { status: 'COMPLETED' } }),
+      prisma.donation.aggregate({
+        where: { status: 'COMPLETED' },
+        _sum: { amountPence: true }
+      }),
+      prisma.donation.aggregate({
+        where: { status: 'COMPLETED', giftAid: true },
+        _sum: { amountPence: true }
+      })
     ]),
     prisma.booking.findMany({
       where: { status: 'CONFIRMED' },
@@ -65,12 +75,21 @@ export default async function AdminHome() {
       where: { status: 'SUCCEEDED' },
       _count: { _all: true },
       _sum: { amountPence: true }
+    }),
+    // Donation breakdown by material (for table at bottom of admin)
+    prisma.donation.groupBy({
+      by: ['materialLabel'],
+      where: { status: 'COMPLETED' },
+      _sum: { amountPence: true },
+      _count: { _all: true }
     })
   ]);
 
-  const [bookingCount, sums, giftAidCount, holdCount] = totals;
+  const [bookingCount, sums, giftAidCount, holdCount, donationCount, donationSums, giftAidDonationSums] = totals;
   const revenuePence = sums._sum.amountPence ?? 0;
   const donationPence = sums._sum.donationPence ?? 0;
+  const standaloneDonationPence = donationSums._sum.amountPence ?? 0;
+  const giftAidDonationPence = giftAidDonationSums._sum.amountPence ?? 0;
 
   // Per-yagna capacity (Pitru 9×3, others 11×3). Sum across all enabled sessions.
   const totalCapacity = days.reduce(
@@ -97,7 +116,8 @@ export default async function AdminHome() {
             <p className="text-sm text-ivory-100/85 mt-1">Signed in as {admin.email}</p>
           </div>
           <div className="flex gap-2 flex-wrap">
-            <a href="/api/admin/export" className="btn-secondary !bg-ivory-50/15 !text-ivory-50 !border-ivory-50/30 hover:!bg-ivory-50/25">↓ Export CSV</a>
+            <a href="/api/admin/export" className="btn-secondary !bg-ivory-50/15 !text-ivory-50 !border-ivory-50/30 hover:!bg-ivory-50/25">↓ Bookings CSV</a>
+            <a href="/api/admin/donations" className="btn-secondary !bg-ivory-50/15 !text-ivory-50 !border-ivory-50/30 hover:!bg-ivory-50/25">↓ Donations CSV</a>
             <WipeBookingsButton />
             <Link href="/" className="btn-ghost !text-ivory-100 hover:!bg-ivory-50/10">View site</Link>
           </div>
@@ -135,6 +155,57 @@ export default async function AdminHome() {
               </div>
             </div>
           ))}
+        </section>
+      )}
+
+      {/* Standalone donations (via /donate) ─ separate from booking-attached donations */}
+      {(donationCount > 0 || donationsByMaterial.length > 0) && (
+        <section className="mt-6 card p-5">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+            <div>
+              <h2 className="h-display text-xl text-maroon-800">Donations</h2>
+              <p className="text-xs text-maroon-700 mt-0.5">Direct giving via /donate (separate from booking add-ons).</p>
+            </div>
+            <a href="/api/admin/donations" className="btn-ghost !py-1 !px-3 !text-xs">↓ Export donations CSV</a>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-3 mb-4">
+            <div className="rounded-lg border border-gold-200 bg-ivory-100 p-3">
+              <div className="text-[10px] uppercase tracking-widest text-maroon-700">Completed donations</div>
+              <div className="h-display text-2xl text-maroon-800 mt-0.5">{donationCount}</div>
+            </div>
+            <div className="rounded-lg border border-gold-200 bg-ivory-100 p-3">
+              <div className="text-[10px] uppercase tracking-widest text-maroon-700">Direct giving</div>
+              <div className="h-display text-2xl text-maroon-800 mt-0.5">{formatGBP(standaloneDonationPence)}</div>
+              <div className="text-[10px] text-maroon-700/85 mt-0.5">+ {formatGBP(donationPence)} via bookings</div>
+            </div>
+            <div className="rounded-lg border border-gold-200 bg-ivory-100 p-3">
+              <div className="text-[10px] uppercase tracking-widest text-maroon-700">Gift Aid eligible</div>
+              <div className="h-display text-2xl text-maroon-800 mt-0.5">{formatGBP(giftAidDonationPence)}</div>
+              <div className="text-[10px] text-saffron-700 mt-0.5">+25% claimable from HMRC = {formatGBP(Math.round(giftAidDonationPence * 0.25))}</div>
+            </div>
+          </div>
+          {donationsByMaterial.length > 0 && (
+            <div className="rounded-lg border border-gold-200 overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-temple-gradient">
+                  <tr>
+                    <th className="text-left px-4 py-2 text-xs uppercase tracking-widest text-maroon-700">Dedicated to</th>
+                    <th className="text-right px-4 py-2 text-xs uppercase tracking-widest text-maroon-700">Donations</th>
+                    <th className="text-right px-4 py-2 text-xs uppercase tracking-widest text-maroon-700">Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gold-100 bg-ivory-50">
+                  {donationsByMaterial.map((r) => (
+                    <tr key={r.materialLabel ?? 'general'}>
+                      <td className="px-4 py-3 text-maroon-900">{r.materialLabel ?? 'General donation'}</td>
+                      <td className="px-4 py-3 text-right text-maroon-700/85">{r._count._all}</td>
+                      <td className="px-4 py-3 text-right text-maroon-900 tabular-nums">{formatGBP(r._sum.amountPence ?? 0)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
       )}
 

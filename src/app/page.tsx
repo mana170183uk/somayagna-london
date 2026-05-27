@@ -42,9 +42,13 @@ function Header() {
           <a href="#booking" className="hover:text-maroon-700">How to book</a>
           <a href="#pricing" className="hover:text-maroon-700">Seva offerings</a>
           <a href="#schedule" className="hover:text-maroon-700">Schedule</a>
+          <Link href="/donate" className="hover:text-maroon-700">Donate</Link>
           <a href="#faq" className="hover:text-maroon-700">FAQ</a>
         </nav>
-        <Link href="/book" className="btn-primary !py-2.5 !px-5 !text-sm">Book a Seva</Link>
+        <div className="flex items-center gap-2">
+          <Link href="/donate" className="btn-ghost !py-2.5 !px-4 !text-sm hidden sm:inline-flex">Donate</Link>
+          <Link href="/book" className="btn-primary !py-2.5 !px-5 !text-sm">Book a Seva</Link>
+        </div>
       </div>
     </header>
   );
@@ -626,6 +630,8 @@ function Footer() {
           © {new Date().getFullYear()} {EVENT.organizer}
         </div>
         <div className="flex gap-4">
+          <Link href="/donate" className="hover:text-ivory-50">Donate</Link>
+          <Link href="/book" className="hover:text-ivory-50">Book a Seva</Link>
           <a href="#" className="hover:text-ivory-50">Privacy</a>
           <a href="#" className="hover:text-ivory-50">Refund policy</a>
           <Link href="/admin" className="hover:text-ivory-50">Organiser login</Link>

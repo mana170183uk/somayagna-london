@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { confirmBookingFromHold, cancelHold } from '@/lib/inventory';
+import { completeDonation, failDonation } from '@/lib/donations';
 import { prisma } from '@/lib/prisma';
 import { sendConfirmationEmail } from '@/lib/email';
 
@@ -14,6 +15,15 @@ export async function POST(req: NextRequest) {
     const orderId = resource?.id ?? resource?.supplementary_data?.related_ids?.order_id;
     const holdId = resource?.purchase_units?.[0]?.custom_id ?? resource?.custom_id;
     if (!holdId) return NextResponse.json({ ok: true });
+
+    // Branch: standalone donations carry a 'donation:<id>' prefix.
+    if (typeof holdId === 'string' && holdId.startsWith('donation:')) {
+      const donationId = holdId.slice('donation:'.length);
+      try {
+        await completeDonation({ donationId, provider: 'PAYPAL', providerRef: orderId, raw: event });
+      } catch (e) { console.error('Donation confirm failed (PayPal)', e); }
+      return NextResponse.json({ received: true });
+    }
 
     const hold = await prisma.bookingHold.findUnique({ where: { id: holdId } });
     if (!hold) return NextResponse.json({ ok: true });
@@ -57,7 +67,13 @@ export async function POST(req: NextRequest) {
 
   if (event.event_type === 'CHECKOUT.ORDER.VOIDED' || event.event_type === 'PAYMENT.CAPTURE.DENIED') {
     const holdId = event.resource?.purchase_units?.[0]?.custom_id ?? event.resource?.custom_id;
-    if (holdId) await cancelHold(holdId).catch(console.error);
+    if (holdId) {
+      if (typeof holdId === 'string' && holdId.startsWith('donation:')) {
+        await failDonation(holdId.slice('donation:'.length), event).catch(console.error);
+      } else {
+        await cancelHold(holdId).catch(console.error);
+      }
+    }
   }
 
   return NextResponse.json({ received: true });

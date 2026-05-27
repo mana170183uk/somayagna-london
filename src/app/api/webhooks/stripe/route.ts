@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getStripe } from '@/lib/stripe';
 import { confirmBookingFromHold, cancelHold } from '@/lib/inventory';
+import { completeDonation, failDonation } from '@/lib/donations';
 import { prisma } from '@/lib/prisma';
 import { sendConfirmationEmail } from '@/lib/email';
 
@@ -22,6 +23,17 @@ export async function POST(req: NextRequest) {
     const s = event.data.object as any;
     const holdId = s.metadata?.holdId;
     if (!holdId) return NextResponse.json({ ok: true });
+
+    // Branch: standalone donations (via /donate) carry a 'donation:<id>' prefix
+    // in their checkout metadata.holdId. Bookings carry the raw hold id.
+    if (typeof holdId === 'string' && holdId.startsWith('donation:')) {
+      const donationId = holdId.slice('donation:'.length);
+      try {
+        await completeDonation({ donationId, provider: 'STRIPE', providerRef: s.id, raw: s });
+      } catch (e) { console.error('Donation confirm failed', e); }
+      return NextResponse.json({ received: true });
+    }
+
     const hold = await prisma.bookingHold.findUnique({ where: { id: holdId } });
     if (!hold) return NextResponse.json({ ok: true });
 
@@ -67,8 +79,14 @@ export async function POST(req: NextRequest) {
   }
 
   if (event.type === 'checkout.session.expired' || event.type === 'payment_intent.payment_failed') {
-    const holdId = (event.data.object as any).metadata?.holdId;
-    if (holdId) await cancelHold(holdId).catch(console.error);
+    const holdId = (event.data.object as any).metadata?.holdId as string | undefined;
+    if (holdId) {
+      if (holdId.startsWith('donation:')) {
+        await failDonation(holdId.slice('donation:'.length), event.data.object).catch(console.error);
+      } else {
+        await cancelHold(holdId).catch(console.error);
+      }
+    }
   }
 
   return NextResponse.json({ received: true });

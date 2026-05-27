@@ -60,3 +60,23 @@ export const adminCreateBookingSchema = z.object({
   phone: z.string().min(5),
   secondParticipantName: z.string().nullable().optional()
 });
+
+/* ─── Donations ─── */
+import { MATERIALS } from './materials';
+
+const materialKeys = MATERIALS.map((m) => m.key) as [string, ...string[]];
+
+export const donationCheckoutSchema = z.object({
+  type: z.enum(['GENERAL', 'MATERIAL']),
+  materialKey: z.enum(materialKeys).optional().nullable(),
+  amountPence: z.number().int().min(100).max(1_000_000_000),
+  donorName: z.string().min(2).max(120),
+  donorEmail: z.string().email(),
+  donorPhone: z.string().max(40).optional().nullable(),
+  message: z.string().max(500).optional().nullable(),
+  anonymous: z.boolean().optional(),
+  giftAid: z.boolean().optional(),
+  giftAidAddress: z.string().max(200).optional().nullable(),
+  giftAidPostcode: z.string().max(20).optional().nullable(),
+  provider: z.enum(['stripe', 'paypal', 'mock'])
+});

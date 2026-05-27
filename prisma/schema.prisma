@@ -226,3 +226,50 @@ model AuditLog {
 
   @@index([createdAt])
 }
+
+/* ─────────────────────────  Donations  ───────────────────────── */
+
+enum DonationType {
+  GENERAL          // free-text custom amount
+  MATERIAL         // toward a specific material (ghee, prasad, etc.)
+}
+
+enum DonationStatus {
+  PENDING_PAYMENT
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+model Donation {
+  id              String            @id @default(cuid())
+  reference       String            @unique             // SY-DON-2026-XXXXXX
+  type            DonationType
+  materialKey     String?                                // "ghee" | "prasad" | "annadana" | ...
+  materialLabel   String?                                // "Ghee for the sacred fire"
+  amountPence     Int
+  currency        String            @default("GBP")
+
+  // Donor
+  donorName       String
+  donorEmail      String
+  donorPhone      String?
+  message         String?           @db.Text             // optional dedication / words
+  anonymous       Boolean           @default(false)
+  giftAid         Boolean           @default(false)      // UK HMRC Gift Aid declaration
+  giftAidAddress  String?                                // required by HMRC if giftAid=true
+  giftAidPostcode String?
+
+  status          DonationStatus    @default(PENDING_PAYMENT)
+  paymentProvider PaymentProvider?
+  paymentRef      String?
+  rawWebhook      Json?
+
+  completedAt     DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([status])
+  @@index([donorEmail])
+  @@index([materialKey])
+}
