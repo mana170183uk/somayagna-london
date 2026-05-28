@@ -17,6 +17,7 @@ const DOMAIN = process.env.QR_DOMAIN ?? 'https://somayagna.unityindivinity.com';
 
 const TARGETS = {
   'site-qr':   `${DOMAIN}/`,
+  'book-qr':   `${DOMAIN}/book`,
   'donate-qr': `${DOMAIN}/donate`
 };
 
@@ -57,6 +58,8 @@ const manifest = {
   codes: [
     { key: 'site-qr',   url: TARGETS['site-qr'],   png: '/qr/site-qr.png',   svg: '/qr/site-qr.svg',
       purpose: 'Display on other websites / printed materials to open the SomaYagna London homepage.' },
+    { key: 'book-qr',   url: TARGETS['book-qr'],   png: '/qr/book-qr.png',   svg: '/qr/book-qr.svg',
+      purpose: 'Share / print so devotees can scan to open the Yagna booking flow directly.' },
     { key: 'donate-qr', url: TARGETS['donate-qr'], png: '/qr/donate-qr.png', svg: '/qr/donate-qr.svg',
       purpose: 'Share / print so devotees can scan to open the Donate page directly.' }
   ]
