@@ -93,7 +93,28 @@ function Hero() {
             <div className="text-xs uppercase tracking-[0.32em] text-gold-200 mb-2">Where</div>
             <div className="h-display text-2xl md:text-3xl">{EVENT.venueName}</div>
             <div className="text-sm text-ivory-100/90">{EVENT.venueAddress}</div>
+            <a
+              href={EVENT.venueMapLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs uppercase tracking-widest text-gold-200 hover:text-ivory-50 mt-2"
+            >
+              <span aria-hidden>📍</span> Open in Google Maps
+            </a>
           </div>
+        </div>
+
+        <div className="mt-8 rounded-2xl overflow-hidden border border-gold-300/30 shadow-altar max-w-2xl">
+          <iframe
+            src={EVENT.venueMapEmbedUrl}
+            title={`Map of ${EVENT.venueName}, ${EVENT.venueAddress}`}
+            width="100%"
+            height="260"
+            style={{ border: 0 }}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            allowFullScreen
+          />
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">

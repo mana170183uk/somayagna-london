@@ -21,8 +21,12 @@ export const EVENT = {
   startDate: '14 June',
   endDate: '21 June',
   organizer: process.env.EVENT_ORGANIZER ?? 'Unity in Divinity (UK Registered Charity)',
-  venueName: process.env.EVENT_VENUE_NAME ?? 'Venue to be announced',
-  venueAddress: process.env.EVENT_VENUE_ADDRESS ?? 'London, United Kingdom',
+  venueName: process.env.EVENT_VENUE_NAME ?? 'Shree Swaminarayan Mandir',
+  venueAddress: process.env.EVENT_VENUE_ADDRESS ?? 'Wood Lane, Stanmore HA7 4LF',
+  venueMapEmbedUrl: process.env.EVENT_VENUE_MAP_EMBED_URL
+    ?? 'https://www.google.com/maps?q=Shree+Swaminarayan+Mandir,+Wood+Lane,+Stanmore+HA7+4LF&output=embed',
+  venueMapLink: process.env.EVENT_VENUE_MAP_LINK
+    ?? 'https://www.google.com/maps/search/?api=1&query=Shree+Swaminarayan+Mandir+Wood+Lane+Stanmore+HA7+4LF',
   contactEmail: process.env.EVENT_CONTACT_EMAIL ?? 'info@somayagnalondon.org',
   contactPhone: process.env.EVENT_CONTACT_PHONE ?? '+44 20 0000 0000'
 };
