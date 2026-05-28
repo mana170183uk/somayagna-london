@@ -104,19 +104,6 @@ function Hero() {
           </div>
         </div>
 
-        <div className="mt-8 rounded-2xl overflow-hidden border border-gold-300/30 shadow-altar max-w-2xl">
-          <iframe
-            src={EVENT.venueMapEmbedUrl}
-            title={`Map of ${EVENT.venueName}, ${EVENT.venueAddress}`}
-            width="100%"
-            height="260"
-            style={{ border: 0 }}
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            allowFullScreen
-          />
-        </div>
-
         <div className="mt-6 flex flex-wrap gap-3">
           <span className="rounded-full border border-gold-300/40 px-4 py-1.5 text-xs tracking-wider uppercase text-gold-200">Purshotam Yagna</span>
           <span className="rounded-full border border-gold-300/40 px-4 py-1.5 text-xs tracking-wider uppercase text-gold-200">Vishnu Gopal Maha Yagna</span>

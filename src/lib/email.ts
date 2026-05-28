@@ -96,6 +96,14 @@ function renderHtml(i: ConfirmEmailInput) {
         <tr><td style="color:#7A380D;">Venue</td><td>${escapeHtml(EVENT.venueName)}, ${escapeHtml(EVENT.venueAddress)}</td></tr>
       </table>
     </td></tr>
+    <tr><td style="padding:8px 32px 16px 32px;">
+      <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="background:#8B2727;border-radius:8px;">
+        <a href="${EVENT.venueMapLink}" target="_blank" rel="noopener noreferrer"
+           style="display:inline-block;padding:14px 28px;color:#FFFCF6;text-decoration:none;font-size:15px;font-weight:bold;">
+          📍 Get directions in Google Maps
+        </a>
+      </td></tr></table>
+    </td></tr>
     <tr><td style="padding:24px 32px 32px 32px;font-size:14px;line-height:1.55;color:#561414;">
       Please arrive 20 minutes before your session and bring this email (printed or on your phone).
       Modest, comfortable clothing is recommended. If you need to update your booking, contact
@@ -126,6 +134,7 @@ Kund:          Kund ${i.kundNumber}
 Position:      ${typeLabel}
 Seva amount:   ${formatGBP(i.amountPence)}${donationLines}
 Venue:         ${EVENT.venueName}, ${EVENT.venueAddress}
+Directions:    ${EVENT.venueMapLink}
 
 Please arrive 20 minutes before your session and bring this email
 (printed or on your phone). Modest, comfortable clothing is recommended.

@@ -54,6 +54,30 @@ export default async function Confirmation({ params }: { params: Promise<{ booki
             )}
             <Row k="Venue" v={`${EVENT.venueName}, ${EVENT.venueAddress}`} />
 
+            <div className="pt-2">
+              <div className="text-xs uppercase tracking-widest text-maroon-700/90 mb-2">How to find us</div>
+              <div className="rounded-2xl overflow-hidden border border-gold-200 shadow-soft-gold">
+                <iframe
+                  src={EVENT.venueMapEmbedUrl}
+                  title={`Map of ${EVENT.venueName}, ${EVENT.venueAddress}`}
+                  width="100%"
+                  height="240"
+                  style={{ border: 0 }}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  allowFullScreen
+                />
+              </div>
+              <a
+                href={EVENT.venueMapLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-secondary mt-3 inline-flex items-center gap-2"
+              >
+                <span aria-hidden>📍</span> Open directions in Google Maps
+              </a>
+            </div>
+
             <hr className="border-gold-200 my-4" />
             <p className="text-sm text-maroon-900/90 leading-relaxed">
               A confirmation email is on its way to <strong>{booking.email}</strong>.
