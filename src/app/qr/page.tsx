@@ -46,7 +46,41 @@ export default function QRPage() {
           <a href="/qr/site-qr.svg" download className="btn-secondary">Download SVG (vector)</a>
         </div>
 
-        <div className="mt-16 grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+        <div className="mt-16 grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div className="card p-6">
+            <div className="text-xs tracking-widest uppercase text-maroon-700/70">Also available</div>
+            <h3 className="h-display text-xl text-maroon-800 mt-1">Book a Yagna QR</h3>
+            <p className="text-sm text-maroon-900/70 mt-1">Scan to open <code className="text-saffron-700">/book</code> directly — ideal for flyers, posters and outreach.</p>
+            <Image
+              src="/qr/book-qr.png"
+              alt="QR code linking to the Yagna booking page"
+              width={512} height={512}
+              className="w-full h-auto rounded-lg mt-3 bg-ivory-50 p-2"
+            />
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Link href="/book" className="btn-ghost text-sm">View book page →</Link>
+              <a href="/qr/book-qr.png" download className="btn-ghost text-sm">PNG ↓</a>
+              <a href="/qr/book-qr.svg" download className="btn-ghost text-sm">SVG ↓</a>
+            </div>
+          </div>
+
+          <div className="card p-6">
+            <div className="text-xs tracking-widest uppercase text-maroon-700/70">Also available</div>
+            <h3 className="h-display text-xl text-maroon-800 mt-1">Donate page QR</h3>
+            <p className="text-sm text-maroon-900/70 mt-1">Scan to open <code className="text-saffron-700">/donate</code> — perfect for in-venue donation appeals.</p>
+            <Image
+              src="/qr/donate-qr.png"
+              alt="QR code linking to the donate page"
+              width={512} height={512}
+              className="w-full h-auto rounded-lg mt-3 bg-ivory-50 p-2"
+            />
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Link href="/donate" className="btn-ghost text-sm">View donate page →</Link>
+              <a href="/qr/donate-qr.png" download className="btn-ghost text-sm">PNG ↓</a>
+              <a href="/qr/donate-qr.svg" download className="btn-ghost text-sm">SVG ↓</a>
+            </div>
+          </div>
+
           <div className="card p-6">
             <div className="text-xs tracking-widest uppercase text-maroon-700/70">Embed on another website</div>
             <h3 className="h-display text-xl text-maroon-800 mt-1">HTML snippet</h3>
@@ -55,17 +89,6 @@ export default function QRPage() {
        alt="Scan to open SomaYagna London"
        width="240" height="240" />
 </a>`}</code></pre>
-          </div>
-
-          <div className="card p-6">
-            <div className="text-xs tracking-widest uppercase text-maroon-700/70">Also available</div>
-            <h3 className="h-display text-xl text-maroon-800 mt-1">Donate page QR</h3>
-            <p className="text-sm text-maroon-900/70 mt-1">A separate QR code resolves to <code className="text-saffron-700">/donate</code> — perfect for in-venue donation appeals.</p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Link href="/donate" className="btn-ghost text-sm">View donate page →</Link>
-              <a href="/qr/donate-qr.png" download className="btn-ghost text-sm">PNG ↓</a>
-              <a href="/qr/donate-qr.svg" download className="btn-ghost text-sm">SVG ↓</a>
-            </div>
           </div>
         </div>
       </main>
