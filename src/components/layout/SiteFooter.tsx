@@ -18,6 +18,19 @@ export default function SiteFooter() {
           <Link href="/admin" className="hover:text-ivory-50">Organiser login</Link>
         </div>
       </div>
+      <div className="border-t border-gold-300/15">
+        <div className="container-tight py-3 text-center text-xs text-ivory-100/60">
+          Designed and Developed by{' '}
+          <a
+            href="https://totalcloudai.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gold-300 hover:text-ivory-50 transition"
+          >
+            TotalCloudAI Ltd
+          </a>
+        </div>
+      </div>
     </footer>
   );
 }
