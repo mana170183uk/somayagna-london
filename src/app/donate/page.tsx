@@ -8,6 +8,20 @@ import { HERO, QUOTES, WHERE_IT_GOES, ASSURANCES } from '@/lib/donation-copy';
 import SiteHeader from '@/components/layout/SiteHeader';
 import SiteFooter from '@/components/layout/SiteFooter';
 
+const WHERE_PALETTES = [
+  { emoji: '🪔', bg: 'bg-amber-100',   border: 'border-amber-400',   title: 'text-amber-800'   },
+  { emoji: '🕉', bg: 'bg-violet-100',  border: 'border-violet-400',  title: 'text-violet-800'  },
+  { emoji: '🍛', bg: 'bg-yellow-100',  border: 'border-yellow-400',  title: 'text-yellow-800'  },
+  { emoji: '🌿', bg: 'bg-emerald-100', border: 'border-emerald-400', title: 'text-emerald-800' }
+];
+
+const ASSURANCE_PALETTES = [
+  { emoji: '🛡', bg: 'bg-rose-100',    border: 'border-rose-400',    title: 'text-rose-800'    },
+  { emoji: '➕', bg: 'bg-amber-100',   border: 'border-amber-400',   title: 'text-amber-800'   },
+  { emoji: '🔒', bg: 'bg-sky-100',     border: 'border-sky-400',     title: 'text-sky-800'     },
+  { emoji: '🪷', bg: 'bg-pink-100',    border: 'border-pink-400',    title: 'text-pink-800'    }
+];
+
 export const metadata = {
   title: `Donate · ${EVENT.name}`,
   description: 'Support the SomaYagna London programme — ghee, prasad, sacred wood, annadana and more.'
@@ -77,12 +91,21 @@ export default function DonatePage() {
               </p>
             </div>
             <ul className="space-y-4">
-              {WHERE_IT_GOES.map(([title, body]) => (
-                <li key={title} className="card p-5">
-                  <div className="h-display text-xl text-maroon-800">{title}</div>
-                  <p className="text-sm text-maroon-900/70 mt-1">{body}</p>
-                </li>
-              ))}
+              {WHERE_IT_GOES.map(([title, body], i) => {
+                const p = WHERE_PALETTES[i % WHERE_PALETTES.length];
+                return (
+                  <li
+                    key={title}
+                    className={`rounded-2xl p-5 border-2 shadow-soft-gold transition hover:-translate-y-0.5 ${p.bg} ${p.border}`}
+                  >
+                    <div className="flex items-baseline gap-2.5">
+                      <span aria-hidden className="text-2xl leading-none">{p.emoji}</span>
+                      <div className={`h-display text-xl ${p.title}`}>{title}</div>
+                    </div>
+                    <p className="text-sm text-maroon-900/75 mt-1.5">{body}</p>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </section>
@@ -95,12 +118,21 @@ export default function DonatePage() {
               <h2 className="h-display text-4xl md:text-5xl text-maroon-800">Your gift, treated with reverence</h2>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {ASSURANCES.map(([title, body]) => (
-                <div key={title} className="card p-5">
-                  <div className="h-display text-lg text-maroon-800">{title}</div>
-                  <p className="text-xs text-maroon-900/70 mt-1.5 leading-relaxed">{body}</p>
-                </div>
-              ))}
+              {ASSURANCES.map(([title, body], i) => {
+                const p = ASSURANCE_PALETTES[i % ASSURANCE_PALETTES.length];
+                return (
+                  <div
+                    key={title}
+                    className={`rounded-2xl p-5 border-2 shadow-soft-gold transition hover:-translate-y-0.5 ${p.bg} ${p.border}`}
+                  >
+                    <div className="flex items-baseline gap-2">
+                      <span aria-hidden className="text-xl leading-none">{p.emoji}</span>
+                      <div className={`h-display text-lg ${p.title}`}>{title}</div>
+                    </div>
+                    <p className="text-xs text-maroon-900/75 mt-1.5 leading-relaxed">{body}</p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
