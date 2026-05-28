@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { OmGlyph, Mandala, Diya, LotusBorder } from '@/components/ui/Ornaments';
+import { Mandala, Diya, LotusBorder } from '@/components/ui/Ornaments';
 import DonateClient from '@/components/donate/DonateClient';
 import { ENABLED_PROVIDERS, EVENT } from '@/lib/constants';
 import { MATERIALS } from '@/lib/materials';
 import { HERO, QUOTES, WHERE_IT_GOES, ASSURANCES } from '@/lib/donation-copy';
+import SiteHeader from '@/components/layout/SiteHeader';
+import SiteFooter from '@/components/layout/SiteFooter';
 
 export const metadata = {
   title: `Donate · ${EVENT.name}`,
@@ -16,7 +18,7 @@ export default function DonatePage() {
 
   return (
     <div className="min-h-screen bg-ivory-50">
-      <Header />
+      <SiteHeader activeHref="/donate" />
 
       <main>
         {/* ───── Hero ───── */}
@@ -150,48 +152,8 @@ export default function DonatePage() {
         </section>
       </main>
 
-      <Footer />
+      <SiteFooter />
     </div>
   );
 }
 
-function Header() {
-  return (
-    <header className="sticky top-0 z-40 backdrop-blur-md bg-ivory-50/85 border-b border-gold-200/40">
-      <div className="container-tight flex items-center justify-between py-3">
-        <Link href="/" className="flex items-center gap-3 group">
-          <span className="text-maroon-700"><OmGlyph className="w-8 h-8" /></span>
-          <span className="h-display text-xl md:text-2xl text-maroon-800 leading-none">
-            SomaYagna <span className="text-saffron-600">London</span>
-          </span>
-        </Link>
-        <nav className="hidden md:flex items-center gap-5 text-sm text-maroon-800/80">
-          <Link href="/" className="hover:text-maroon-700">Home</Link>
-          <Link href="/#timeline" className="hover:text-maroon-700">Programme</Link>
-          <Link href="/#pricing" className="hover:text-maroon-700">Seva offerings</Link>
-          <Link href="/donate" className="text-maroon-800 font-medium">Donate</Link>
-        </nav>
-        <Link href="/book" className="btn-primary !py-2.5 !px-5 !text-sm">Book a Yagna</Link>
-      </div>
-    </header>
-  );
-}
-
-function Footer() {
-  return (
-    <footer className="bg-maroon-900 text-ivory-100/70 border-t border-gold-300/20">
-      <div className="container-tight py-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-sm">
-        <div className="flex items-center gap-2">
-          <span className="text-gold-300"><OmGlyph className="w-5 h-5" /></span>
-          © {new Date().getFullYear()} Unity in Divinity (UK Registered Charity 1215528)
-        </div>
-        <div className="flex gap-4">
-          <Link href="/" className="hover:text-ivory-50">Home</Link>
-          <Link href="/book" className="hover:text-ivory-50">Book</Link>
-          <Link href="/qr" className="hover:text-ivory-50">QR codes</Link>
-          <Link href="/admin" className="hover:text-ivory-50">Organiser</Link>
-        </div>
-      </div>
-    </footer>
-  );
-}
