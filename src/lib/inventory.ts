@@ -380,3 +380,96 @@ export async function adminCreateConfirmedBooking(args: AdminCreateArgs) {
     return booking;
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
+
+/* ───────────────────────── Offline / CSV-imported booking ──────────────────
+ * Like adminCreateConfirmedBooking, but accepts the full set of fields the
+ * public form captures (whatsapp, address, gift aid, donation) plus
+ * offline-payment metadata (method, ref). The payment row uses the chosen
+ * provider (CASH / BANK_TRANSFER / CHEQUE / ADMIN_MANUAL) and stores the
+ * external reference in providerRef for audit.
+ */
+export type OfflinePaymentMethod = 'CASH' | 'BANK_TRANSFER' | 'CHEQUE' | 'ADMIN_MANUAL';
+
+export interface OfflineBookingArgs extends AdminCreateArgs {
+  whatsappNumber?: string | null;
+  addressLine1?: string | null;
+  town?: string | null;
+  postcode?: string | null;
+  giftAid?: boolean;
+  donationPence?: number;
+  amountPaidPence?: number;
+  paymentMethod?: OfflinePaymentMethod;
+  paymentRef?: string | null;
+}
+
+export async function adminCreateOfflineBooking(args: OfflineBookingArgs) {
+  const positions: PositionLabel[] =
+    args.bookingType === 'FULL_KUND' ? [...POSITION_LABELS] : args.positions;
+  const sevaPence = args.bookingType === 'FULL_KUND' ? PRICE_FULL_KUND_PENCE : PRICE_SINGLE_PENCE * positions.length;
+  const donationPence = args.donationPence ?? 0;
+  const totalPaidPence = args.amountPaidPence ?? (sevaPence + donationPence);
+  const method = args.paymentMethod ?? 'ADMIN_MANUAL';
+  // PaymentProvider enum only knows STRIPE/PAYPAL/MOCK/ADMIN_MANUAL, so cash/
+  // bank/cheque all map to ADMIN_MANUAL and the real method goes into
+  // providerRef as "METHOD | ref" for the export.
+  const provider: PaymentProvider = 'ADMIN_MANUAL';
+  const providerRef = args.paymentRef
+    ? `${method} | ${args.paymentRef}`
+    : method;
+
+  return prisma.$transaction(async (tx) => {
+    const kund = await tx.kund.findUnique({
+      where: { sessionId_number: { sessionId: args.sessionId, number: args.kundNumber } },
+      include: { positions: true }
+    });
+    if (!kund) throw new InventoryError('INVALID_REQUEST', `Kund ${args.kundNumber} not found.`);
+    const targets = kund.positions.filter((p) => positions.includes(p.label as PositionLabel));
+    const taken = targets.filter((p) => p.bookingId || p.holdId || p.blocked);
+    if (taken.length > 0) throw new InventoryError('POSITIONS_TAKEN', `Unavailable: ${taken.map((t) => t.label).join(', ')}`);
+
+    const booking = await tx.booking.create({
+      data: {
+        reference: bookingReference(process.env.EVENT_YEAR ?? '2026'),
+        sessionId: args.sessionId,
+        bookingType: args.bookingType,
+        kundNumber: args.kundNumber,
+        positions,
+        amountPence: sevaPence,
+        donationPence,
+        status: 'CONFIRMED' as BookingStatus,
+        primaryName: args.primaryName,
+        relation: args.relation,
+        email: args.email || null,
+        phone: args.phone,
+        whatsappNumber: args.whatsappNumber ?? null,
+        secondParticipantName: args.secondParticipantName ?? null,
+        addressLine1: args.addressLine1 ?? null,
+        town: args.town ?? null,
+        postcode: args.postcode ?? null,
+        giftAid: args.giftAid ?? false,
+        confirmedAt: new Date(),
+        payment: {
+          create: {
+            provider,
+            providerRef,
+            amountPence: totalPaidPence,
+            status: 'SUCCEEDED' as PaymentStatus
+          }
+        }
+      }
+    });
+    await tx.kundPosition.updateMany({
+      where: { id: { in: targets.map((t) => t.id) } },
+      data: { bookingId: booking.id }
+    });
+    await tx.auditLog.create({
+      data: {
+        actor: args.actor,
+        action: 'ADMIN_IMPORT_BOOKING',
+        target: booking.id,
+        meta: { positions, kund: args.kundNumber, method, paymentRef: args.paymentRef ?? null, totalPaidPence }
+      }
+    });
+    return booking;
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+}

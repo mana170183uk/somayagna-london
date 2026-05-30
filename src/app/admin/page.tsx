@@ -9,6 +9,7 @@ import { SessionIcon } from '@/components/ui/SessionIcon';
 import SessionToggle from '@/components/admin/SessionToggle';
 import WipeBookingsButton from '@/components/admin/WipeBookingsButton';
 import WipeDonationsButton from '@/components/admin/WipeDonationsButton';
+import ImportBookingsCard from '@/components/admin/ImportBookingsCard';
 
 export const dynamic = 'force-dynamic';
 
@@ -141,6 +142,10 @@ export default async function AdminHome() {
             <HeroStat label="Donations" value={formatGBP(donationPence)} accent="saffron" sub={`${giftAidCount} Gift Aided`} />
             <HeroStat label="Active holds" value={String(holdCount)} accent="amber" sub={holdCount > 0 ? 'live now' : '—'} live={holdCount > 0} />
           </div>
+        </div>
+
+        <div className="relative mt-6">
+          <ImportBookingsCard />
         </div>
       </header>
 
