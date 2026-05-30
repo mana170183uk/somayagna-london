@@ -61,13 +61,6 @@ export default function ImportBookingsCard() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <a
-            href="/templates/manual-bookings-template.csv"
-            download
-            className="btn-secondary !bg-ivory-50/15 !text-ivory-50 !border-ivory-50/30 hover:!bg-ivory-50/25 !text-xs"
-          >
-            ↓ Download template
-          </a>
           <button
             type="button"
             disabled={busy}
