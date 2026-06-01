@@ -26,7 +26,7 @@ export const EVENT = {
   venueMapEmbedUrl: 'https://www.google.com/maps?q=Shree+Swaminarayan+Mandir,+Wood+Lane,+Stanmore+HA7+4LF&output=embed',
   venueMapLink: 'https://www.google.com/maps/search/?api=1&query=Shree+Swaminarayan+Mandir+Wood+Lane+Stanmore+HA7+4LF',
   contactEmail: process.env.EVENT_CONTACT_EMAIL ?? 'info@somayagnalondon.org',
-  contactPhone: process.env.EVENT_CONTACT_PHONE ?? '+44 20 0000 0000'
+  contactPhone: '+44 7949 849418'
 };
 
 // Safety: when running with a LIVE Stripe key (sk_live_...), `mock` is
