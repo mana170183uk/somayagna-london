@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getAdminFromCookies } from '@/lib/auth';
+import { clientIp, userAgent } from '@/lib/audit';
 
 const bodySchema = z.object({ confirm: z.literal('WIPE-ALL-DONATIONS') });
 
@@ -23,6 +24,8 @@ export async function POST(req: NextRequest) {
     data: {
       actor: admin.email,
       action: 'WIPE_ALL_DONATIONS',
+      ipAddress: clientIp(req),
+      userAgent: userAgent(req),
       meta: { deletedDonations: deleted.count }
     }
   });

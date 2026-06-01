@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getAdminFromCookies } from '@/lib/auth';
+import { clientIp, userAgent } from '@/lib/audit';
 
 const bodySchema = z.object({
   positionIds: z.array(z.string().min(1)).min(1).max(50),
@@ -42,6 +43,8 @@ export async function POST(req: NextRequest) {
       actor: admin.email,
       action: block ? 'BLOCK_POSITIONS' : 'UNBLOCK_POSITIONS',
       target: positionIds.join(','),
+      ipAddress: clientIp(req),
+      userAgent: userAgent(req),
       meta: { count: positionIds.length, reason: reason ?? null }
     }
   });

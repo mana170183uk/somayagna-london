@@ -217,14 +217,18 @@ model AdminUser {
 }
 
 model AuditLog {
-  id        String   @id @default(cuid())
-  actor     String                                     // admin email or "system"
-  action    String                                     // "CANCEL_BOOKING", "EDIT_BOOKING", ...
-  target    String?                                    // booking id, session id, etc.
-  meta      Json?
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  actor      String                                     // admin email or "system"
+  action     String                                     // "CANCEL_BOOKING", "EDIT_BOOKING", "ADMIN_LOGIN", ...
+  target     String?                                    // booking id, session id, etc.
+  meta       Json?
+  ipAddress  String?                                    // captured from x-forwarded-for; null for entries before audit IPs were added
+  userAgent  String?                                    // captured from user-agent header
+  createdAt  DateTime @default(now())
 
   @@index([createdAt])
+  @@index([actor])
+  @@index([action])
 }
 
 // ─────────────────────────  Donations  ─────────────────────────

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getAdminFromCookies } from '@/lib/auth';
+import { clientIp, userAgent } from '@/lib/audit';
 
 /**
  * One-time housekeeping endpoint: deletes ALL bookings, payments and holds,
@@ -41,11 +42,13 @@ export async function POST(req: NextRequest) {
     // 4. Delete holds (both expired and active)
     const deletedHolds = await tx.bookingHold.deleteMany({});
 
-    // 5. Audit log this destructive action
+    // 5. Audit log this destructive action — capture IP/UA from the originating request
     await tx.auditLog.create({
       data: {
         actor: admin.email,
         action: 'WIPE_ALL_BOOKINGS',
+        ipAddress: clientIp(req),
+        userAgent: userAgent(req),
         meta: {
           releasedPositions: releasedPositions.count,
           deletedPayments: deletedPayments.count,
