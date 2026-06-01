@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 
 const rowSchema = z.object({
   eventDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'eventDate must be YYYY-MM-DD'),
-  yagnaType: z.enum(['PURSHOTAM', 'VISHNU_GOPAL_MAHA', 'PITRU']),
+  yagnaType: z.enum(['PURSHOTAM', 'VISHNU_GOPAL', 'PITRU']),
   sessionStartTime: z.string().regex(/^\d{1,2}:\d{2}$/, 'sessionStartTime must be HH:MM'),
   bookingType: z.enum(['SINGLE_POSITION', 'FULL_KUND']),
   kundNumber: z.coerce.number().int().min(1).max(13),
@@ -49,7 +49,7 @@ function normaliseMethod(s: string): OfflinePaymentMethod {
 
 const YAGNA_LABELS: Record<string, string> = {
   PURSHOTAM: 'Purshotam',
-  VISHNU_GOPAL_MAHA: 'Vishnu Gopal Maha',
+  VISHNU_GOPAL: 'Vishnu Gopal',
   PITRU: 'Pitru'
 };
 

@@ -1,3 +1,3 @@
 eventDate,yagnaType,sessionStartTime,bookingType,kundNumber,positions,primaryName,relation,phone,whatsappNumber,addressLine1,town,postcode,email,secondParticipantName,giftAid,donationGBP,amountPaidGBP,paymentMethod,paymentRef,paymentDate,notes
 2026-06-15,PURSHOTAM,08:00,SINGLE_POSITION,5,A,Mr Rajesh Sharma,COUPLE,+44 7700 900123,+44 7700 900123,12 Oak Avenue,Harrow,HA1 2AB,r.sharma@example.com,Mrs Anjali Sharma,TRUE,21,251,CASH,Receipt #008,2026-05-28,Paid in person 28 May
-2026-06-16,VISHNU_GOPAL_MAHA,14:30,FULL_KUND,3,"A,B,C",Dr P. Kumar,INDIVIDUAL,+44 7700 900456,+44 7700 900456,4 Linden Close,Stanmore,HA7 3RZ,,,FALSE,0,753,BANK_TRANSFER,Lloyds ref XJ9921,2026-05-29,Full Kund sponsored
+2026-06-16,VISHNU_GOPAL,14:30,FULL_KUND,3,"A,B,C",Dr P. Kumar,INDIVIDUAL,+44 7700 900456,+44 7700 900456,4 Linden Close,Stanmore,HA7 3RZ,,,FALSE,0,753,BANK_TRANSFER,Lloyds ref XJ9921,2026-05-29,Full Kund sponsored
