@@ -28,6 +28,14 @@ export default async function AdminHome() {
                 bookings: {
                   where: { status: 'CONFIRMED' },
                   select: { positions: true, amountPence: true, donationPence: true, giftAid: true }
+                },
+                kunds: {
+                  select: {
+                    positions: {
+                      where: { blocked: true },
+                      select: { id: true }
+                    }
+                  }
                 }
               }
             }
@@ -52,9 +60,7 @@ export default async function AdminHome() {
       prisma.donation.aggregate({
         where: { status: 'COMPLETED', giftAid: true },
         _sum: { amountPence: true }
-      }),
-      // Admin-blocked positions count as unavailable, same as booked
-      prisma.kundPosition.count({ where: { blocked: true } })
+      })
     ]),
     prisma.booking.findMany({
       where: { status: 'CONFIRMED' },
@@ -87,7 +93,7 @@ export default async function AdminHome() {
     })
   ]);
 
-  const [bookingCount, sums, giftAidCount, holdCount, donationCount, donationSums, giftAidDonationSums, blockedPositionsCount] = totals;
+  const [bookingCount, sums, giftAidCount, holdCount, donationCount, donationSums, giftAidDonationSums] = totals;
   const revenuePence = sums._sum.amountPence ?? 0;
   const donationPence = sums._sum.donationPence ?? 0;
   const standaloneDonationPence = donationSums._sum.amountPence ?? 0;
@@ -99,13 +105,16 @@ export default async function AdminHome() {
       (a, y) => a + y.sessions.filter((s) => s.enabled).length * y.kundCount * 3, 0
     ), 0
   );
-  const bookedPositions = days.reduce(
+  // Helper: positions taken in a single session = confirmed bookings + admin blocks
+  const sessionTaken = (s: { bookings: { positions: string[] }[]; kunds: { positions: { id: string }[] }[] }) =>
+    s.bookings.reduce((c, b) => c + b.positions.length, 0) +
+    s.kunds.reduce((c, k) => c + k.positions.length, 0);
+
+  const totalTaken = days.reduce(
     (acc, d) => acc + d.yagnaInstances.reduce(
-      (a, y) => a + y.sessions.reduce((x, s) => x + s.bookings.reduce((c, b) => c + b.positions.length, 0), 0), 0
+      (a, y) => a + y.sessions.reduce((x, s) => x + sessionTaken(s), 0), 0
     ), 0
   );
-  // Booked + admin-blocked positions both count as unavailable on the public page.
-  const totalTaken = bookedPositions + blockedPositionsCount;
   const fillPct = totalCapacity > 0 ? Math.round((totalTaken / totalCapacity) * 100) : 0;
 
   return (
@@ -259,7 +268,7 @@ export default async function AdminHome() {
         {days.map((d) => {
           const palette = paletteForDate(d.date);
           const dayTaken = d.yagnaInstances.reduce(
-            (acc, y) => acc + y.sessions.reduce((a, s) => a + s.bookings.reduce((x, b) => x + b.positions.length, 0), 0), 0
+            (acc, y) => acc + y.sessions.reduce((a, s) => a + sessionTaken(s), 0), 0
           );
           const dayCap = d.yagnaInstances.reduce(
             (acc, y) => acc + y.sessions.filter((s) => s.enabled).length * y.kundCount * 3, 0
@@ -293,7 +302,7 @@ export default async function AdminHome() {
               {/* Each yagna runs as a sub-section */}
               <div className="divide-y divide-gold-200/60 mt-2">
                 {d.yagnaInstances.map((y) => {
-                  const yTaken = y.sessions.reduce((a, s) => a + s.bookings.reduce((x, b) => x + b.positions.length, 0), 0);
+                  const yTaken = y.sessions.reduce((a, s) => a + sessionTaken(s), 0);
                   const yCap = y.sessions.filter((s) => s.enabled).length * y.kundCount * 3;
                   const yRev = y.sessions.reduce((a, s) => a + s.bookings.reduce((x, b) => x + b.amountPence, 0), 0);
                   return (
@@ -309,7 +318,7 @@ export default async function AdminHome() {
                       </div>
                       <div className="divide-y divide-gold-100">
                         {y.sessions.map((s) => {
-                          const taken = s.bookings.reduce((acc, b) => acc + b.positions.length, 0);
+                          const taken = sessionTaken(s);
                           const sCap = y.kundCount * 3;
                           const remaining = sCap - taken;
                           const revenue = s.bookings.reduce((acc, b) => acc + b.amountPence, 0);
