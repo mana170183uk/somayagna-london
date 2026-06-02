@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { classNames } from '@/lib/utils';
 import KundMandala from './KundMandala';
 import KundVenuePlan from './KundVenuePlan';
@@ -49,7 +49,6 @@ function formatTime(t: string) {
 
 export default function BookingWizard({ initialDays, enabledProviders }: { initialDays: DayLite[]; enabledProviders: string[]; }) {
   const search = useSearchParams();
-  const router = useRouter();
 
   // 7 steps: 1 date · 2 yagna · 3 time · 4 type · 5 kund/seat · 6 details · 7 payment
   const [step, setStep] = useState(1);
@@ -164,19 +163,13 @@ export default function BookingWizard({ initialDays, enabledProviders }: { initi
     setSubmitting(true); setError(null);
     try {
       const body = { ...registration, holdId, provider, donationPence: activeDonationPence };
-      const endpoint = provider === 'stripe' ? '/api/checkout/stripe'
-                     : provider === 'paypal' ? '/api/checkout/paypal'
-                     : '/api/mock-pay';
+      const endpoint = provider === 'stripe' ? '/api/checkout/stripe' : '/api/checkout/paypal';
       const r = await fetch(endpoint, {
         method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body)
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.message || data.error || 'Payment could not start.');
-      if (provider === 'mock') {
-        router.push(`/confirmation/${data.bookingId}`);
-      } else {
-        window.location.href = data.url;
-      }
+      window.location.href = data.url;
     } catch (e: any) { setError(e.message); }
     finally { setSubmitting(false); }
   }

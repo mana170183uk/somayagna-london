@@ -32,7 +32,7 @@ export const registrationSchema = z.object({
   postcode: z.string().min(1).max(20),
   giftAid: z.boolean().optional(),
   donationPence: z.number().int().min(0).max(10_000_00).optional(),
-  provider: z.enum(['stripe', 'paypal', 'mock'])
+  provider: z.enum(['stripe', 'paypal'])
 });
 export type RegistrationInput = z.infer<typeof registrationSchema>;
 
@@ -87,5 +87,5 @@ export const donationCheckoutSchema = z.object({
   message: z.string().max(500).optional().nullable(),
   anonymous: z.boolean().optional(),
   giftAid: z.boolean().optional(),
-  provider: z.enum(['stripe', 'paypal', 'mock'])
+  provider: z.enum(['stripe', 'paypal'])
 });

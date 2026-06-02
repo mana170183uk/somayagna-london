@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { EVENT, formatGBP, PRICE_FULL_KUND_PENCE, PRICE_SINGLE_PENCE } from '@/lib/constants';
 import { Mandala, Diya, LotusBorder } from '@/components/ui/Ornaments';
-import StickyCTA from '@/components/landing/StickyCTA';
 import SiteHeader from '@/components/layout/SiteHeader';
 import SiteFooter from '@/components/layout/SiteFooter';
 import { paletteForDate } from '@/lib/dayColors';
@@ -24,7 +23,6 @@ export default function Home() {
         <Contact />
       </main>
       <SiteFooter />
-      <StickyCTA />
     </>
   );
 }

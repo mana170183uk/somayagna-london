@@ -24,7 +24,7 @@ interface Material {
   palette: MaterialPalette;
 }
 
-type Provider = 'mock' | 'stripe' | 'paypal';
+type Provider = 'stripe' | 'paypal';
 
 const gbp = (p: number) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: p % 100 ? 2 : 0 }).format(p / 100);
 
@@ -41,7 +41,7 @@ export default function DonateClient({ materials, enabledProviders }: { material
     message: '', anonymous: false,
     giftAid: false
   });
-  const [provider, setProvider] = useState<Provider>(() => (enabledProviders[0] as Provider) ?? 'mock');
+  const [provider, setProvider] = useState<Provider>(() => (enabledProviders[0] as Provider) ?? 'stripe');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -77,12 +77,10 @@ export default function DonateClient({ materials, enabledProviders }: { material
         giftAid: donor.giftAid,
         provider
       };
-      const endpoint = provider === 'mock' ? '/api/donations/mock' : '/api/donations/checkout';
-      const r = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+      const r = await fetch('/api/donations/checkout', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
       const data = await r.json();
       if (!r.ok) throw new Error(data.message || data.error || 'Donation could not start.');
-      if (provider === 'mock') router.push(`/donate/${data.donationId}`);
-      else window.location.href = data.url;
+      window.location.href = data.url;
     } catch (e: any) { setErr(e.message); }
     finally { setBusy(false); }
   }
@@ -212,17 +210,17 @@ export default function DonateClient({ materials, enabledProviders }: { material
         {/* Provider + submit */}
         <div className="card p-6">
           <div className="text-xs tracking-widest uppercase text-maroon-700/70 mb-3">Payment</div>
-          <div className="grid sm:grid-cols-3 gap-2">
-            {(['stripe','paypal','mock'] as Provider[]).filter((p) => enabledProviders.includes(p)).map((p) => (
+          <div className="grid sm:grid-cols-2 gap-2">
+            {(['stripe','paypal'] as Provider[]).filter((p) => enabledProviders.includes(p)).map((p) => (
               <button key={p} type="button" onClick={() => setProvider(p)}
                 className={classNames(
                   'rounded-xl border p-4 text-left transition',
                   provider === p ? 'bg-saffron-500 text-ivory-50 border-saffron-500 shadow-soft-gold' : 'bg-ivory-50 border-gold-300/50 hover:border-saffron-400'
                 )}
               >
-                <div className="h-display text-lg">{p === 'stripe' ? 'Card (Stripe)' : p === 'paypal' ? 'PayPal' : 'Demo mode'}</div>
+                <div className="h-display text-lg">{p === 'stripe' ? 'Card (Stripe)' : 'PayPal'}</div>
                 <div className="text-xs opacity-80 mt-0.5">
-                  {p === 'stripe' ? 'Secure GBP card payment' : p === 'paypal' ? 'PayPal balance or linked card' : 'Local-only test confirmation'}
+                  {p === 'stripe' ? 'Secure GBP card payment' : 'PayPal balance or linked card'}
                 </div>
               </button>
             ))}
@@ -255,11 +253,9 @@ export default function DonateClient({ materials, enabledProviders }: { material
           >
             {busy
               ? 'Processing…'
-              : provider === 'mock'
-                ? `Confirm ${gbp(amountPence)} (demo)`
-                : provider === 'stripe'
-                  ? `Donate ${gbp(amountPence)} with card`
-                  : `Donate ${gbp(amountPence)} with PayPal`}
+              : provider === 'stripe'
+                ? `Donate ${gbp(amountPence)} with card`
+                : `Donate ${gbp(amountPence)} with PayPal`}
           </button>
           <p className="text-[11px] text-maroon-900/55 mt-3 leading-relaxed text-center">
             Held in trust by Unity in Divinity. No card details are stored on this site.

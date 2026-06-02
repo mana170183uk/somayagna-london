@@ -29,21 +29,15 @@ export const EVENT = {
   contactPhone: '+44 7949 849418'
 };
 
-// Safety: when running with a LIVE Stripe key (sk_live_...), `mock` is
-// forcibly excluded so Demo mode can never accidentally appear on a real
-// production booking flow — even if ENABLED_PAYMENT_PROVIDERS env var is
-// set incorrectly.
-const _isLiveStripe = (process.env.STRIPE_SECRET_KEY ?? '').startsWith('sk_live_');
-const _rawProviders = (process.env.ENABLED_PAYMENT_PROVIDERS ?? 'stripe')
+// Live payment providers only — the legacy 'mock' demo option has
+// been removed entirely. Any 'mock' entries in the env var are dropped.
+export const ENABLED_PROVIDERS = (process.env.ENABLED_PAYMENT_PROVIDERS ?? 'stripe')
   .split(',')
   .map((s) => s.trim().toLowerCase())
-  .filter(Boolean) as Array<'stripe' | 'paypal' | 'mock'>;
+  .filter(Boolean)
+  .filter((p): p is 'stripe' | 'paypal' => p === 'stripe' || p === 'paypal');
 
-export const ENABLED_PROVIDERS = _isLiveStripe
-  ? _rawProviders.filter((p) => p !== 'mock')
-  : _rawProviders;
-
-export function isProviderEnabled(p: 'stripe' | 'paypal' | 'mock') {
+export function isProviderEnabled(p: 'stripe' | 'paypal') {
   return ENABLED_PROVIDERS.includes(p);
 }
 
