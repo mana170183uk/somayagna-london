@@ -81,7 +81,7 @@ export default async function AdminHome() {
     }),
     prisma.payment.groupBy({
       by: ['provider'],
-      where: { status: 'SUCCEEDED' },
+      where: { status: 'SUCCEEDED', provider: { not: 'MOCK' } },
       _count: { _all: true },
       _sum: { amountPence: true }
     }),
