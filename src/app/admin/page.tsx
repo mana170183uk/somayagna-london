@@ -54,7 +54,9 @@ export default async function AdminHome() {
       prisma.donation.aggregate({
         where: { status: 'COMPLETED', giftAid: true },
         _sum: { amountPence: true }
-      })
+      }),
+      // Admin-blocked positions count as unavailable, same as booked
+      prisma.kundPosition.count({ where: { blocked: true } })
     ]),
     prisma.booking.findMany({
       where: { status: 'CONFIRMED' },
@@ -87,7 +89,7 @@ export default async function AdminHome() {
     })
   ]);
 
-  const [bookingCount, sums, giftAidCount, holdCount, donationCount, donationSums, giftAidDonationSums] = totals;
+  const [bookingCount, sums, giftAidCount, holdCount, donationCount, donationSums, giftAidDonationSums, blockedPositionsCount] = totals;
   const revenuePence = sums._sum.amountPence ?? 0;
   const donationPence = sums._sum.donationPence ?? 0;
   const standaloneDonationPence = donationSums._sum.amountPence ?? 0;
@@ -99,11 +101,13 @@ export default async function AdminHome() {
       (a, y) => a + y.sessions.filter((s) => s.enabled).length * y.kundCount * 3, 0
     ), 0
   );
-  const totalTaken = days.reduce(
+  const bookedPositions = days.reduce(
     (acc, d) => acc + d.yagnaInstances.reduce(
       (a, y) => a + y.sessions.reduce((x, s) => x + s.bookings.reduce((c, b) => c + b.positions.length, 0), 0), 0
     ), 0
   );
+  // Booked + admin-blocked positions both count as unavailable on the public page.
+  const totalTaken = bookedPositions + blockedPositionsCount;
   const fillPct = totalCapacity > 0 ? Math.round((totalTaken / totalCapacity) * 100) : 0;
 
   return (

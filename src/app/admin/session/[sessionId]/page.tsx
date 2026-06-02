@@ -31,7 +31,12 @@ export default async function SessionDetail({ params }: { params: Promise<{ sess
   });
   if (!session) notFound();
 
-  const taken = session.kunds.reduce((acc, k) => acc + k.positions.filter((p) => p.bookingId).length, 0);
+  // Both booked and admin-blocked positions are unavailable to the public,
+  // so they both count toward "taken" in the availability summary.
+  const taken = session.kunds.reduce(
+    (acc, k) => acc + k.positions.filter((p) => p.bookingId || p.blocked).length,
+    0
+  );
   const capacity = session.yagnaInstance.kundCount * 3;
   const dayPalette = paletteForDate(session.yagnaInstance.eventDay.date);
   const sessionPalette = paletteForSession(session.startTime);
