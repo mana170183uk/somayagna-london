@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { classNames } from '@/lib/utils';
 import { GIFT_AID_DECLARATION } from '@/lib/donation-copy';
@@ -44,6 +44,24 @@ export default function DonateClient({ materials, enabledProviders }: { material
   const [provider, setProvider] = useState<Provider>(() => (enabledProviders[0] as Provider) ?? 'stripe');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  // 'Donate any amount' CTA on /donate links to #custom — but #custom only
+  // exists in the DOM when mode === 'GENERAL'. Switch the mode on mount/hash-
+  // change and scroll the now-present section into view.
+  useEffect(() => {
+    const handleHash = () => {
+      if (window.location.hash === '#custom') {
+        setMode('GENERAL');
+        // Wait for the GENERAL section to mount before scrolling.
+        setTimeout(() => {
+          document.getElementById('custom')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 80);
+      }
+    };
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
 
   const selectedMaterial = useMemo(() => materials.find((m) => m.key === materialKey) ?? null, [materials, materialKey]);
 
