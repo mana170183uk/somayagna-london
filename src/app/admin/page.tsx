@@ -7,8 +7,6 @@ import { Mandala } from '@/components/ui/Ornaments';
 import { paletteForDate, paletteForSession } from '@/lib/dayColors';
 import { SessionIcon } from '@/components/ui/SessionIcon';
 import SessionToggle from '@/components/admin/SessionToggle';
-import WipeBookingsButton from '@/components/admin/WipeBookingsButton';
-import WipeDonationsButton from '@/components/admin/WipeDonationsButton';
 import ImportBookingsCard from '@/components/admin/ImportBookingsCard';
 
 export const dynamic = 'force-dynamic';
@@ -127,8 +125,6 @@ export default async function AdminHome() {
             <Link href="/admin/enquiries" className="btn-secondary !bg-ivory-50/15 !text-ivory-50 !border-ivory-50/30 hover:!bg-ivory-50/25">📥 Enquiries</Link>
             <Link href="/admin/audit" className="btn-secondary !bg-ivory-50/15 !text-ivory-50 !border-ivory-50/30 hover:!bg-ivory-50/25">🕓 Audit log</Link>
             <Link href="/admin/account" className="btn-secondary !bg-ivory-50/15 !text-ivory-50 !border-ivory-50/30 hover:!bg-ivory-50/25">🔑 Change password</Link>
-            <WipeBookingsButton />
-            <WipeDonationsButton />
             <Link href="/" className="btn-ghost !text-ivory-100 hover:!bg-ivory-50/10">View site</Link>
           </div>
         </div>
