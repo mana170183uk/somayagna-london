@@ -14,6 +14,7 @@ export default function SiteFooter() {
           <Link href="/" className="hover:text-ivory-50">Home</Link>
           <Link href="/donate" className="hover:text-ivory-50">Donate or Seva</Link>
           <Link href="/book" className="hover:text-ivory-50">Book a Yagna</Link>
+          <Link href="/contact" className="hover:text-ivory-50">Contact</Link>
           <Link href="/qr" className="hover:text-ivory-50">QR codes</Link>
           <Link href="/admin" className="hover:text-ivory-50">Organiser login</Link>
         </div>

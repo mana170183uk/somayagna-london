@@ -216,6 +216,41 @@ model AdminUser {
   createdAt    DateTime @default(now())
 }
 
+enum EnquiryStatus {
+  NEW
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum EnquirySubject {
+  SLOT_BOOKING
+  DONATION
+  SEVA
+  CHANGE_BOOKING
+  OTHER
+}
+
+model Enquiry {
+  id               String         @id @default(cuid())
+  name             String
+  email            String
+  phone            String?
+  bookingReference String?                            // optional — present if the enquiry is about an existing booking
+  subject          EnquirySubject
+  message          String         @db.Text
+  status           EnquiryStatus  @default(NEW)
+  handledBy        String?                            // admin email that resolved it
+  handledAt        DateTime?
+  resolutionNotes  String?        @db.Text
+  ipAddress        String?
+  userAgent        String?
+  createdAt        DateTime       @default(now())
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([bookingReference])
+}
+
 model AuditLog {
   id         String   @id @default(cuid())
   actor      String                                     // admin email or "system"

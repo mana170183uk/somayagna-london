@@ -66,6 +66,15 @@ import { MATERIALS } from './materials';
 
 const materialKeys = MATERIALS.map((m) => m.key) as [string, ...string[]];
 
+export const enquirySchema = z.object({
+  name: z.string().min(2).max(120),
+  email: z.string().email().max(200),
+  phone: z.string().max(40).optional().or(z.literal('')),
+  bookingReference: z.string().max(40).optional().or(z.literal('')),
+  subject: z.enum(['SLOT_BOOKING', 'DONATION', 'SEVA', 'CHANGE_BOOKING', 'OTHER']),
+  message: z.string().min(10, 'Please add a few words so we can help.').max(2000)
+});
+
 export const donationCheckoutSchema = z.object({
   type: z.enum(['GENERAL', 'MATERIAL']),
   materialKey: z.enum(materialKeys).optional().nullable(),

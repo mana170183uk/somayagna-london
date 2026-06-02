@@ -18,6 +18,7 @@ export default function SiteHeader({ activeHref }: SiteHeaderProps) {
           <a href="/#pricing" className="hover:text-maroon-700">Seva offerings</a>
           <a href="/#schedule" className="hover:text-maroon-700">Schedule</a>
           <a href="/#faq" className="hover:text-maroon-700">FAQ</a>
+          <Link href="/contact" className="hover:text-maroon-700">Contact</Link>
         </nav>
         <div className="flex items-center gap-1.5 sm:gap-2">
           <Link
