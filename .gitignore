@@ -10,5 +10,8 @@ prisma/migrations/dev
 coverage
 .vercel
 
+# Claude Code internal state — local only
+.claude/
+
 # Spec / planning docs — keep local, not in repo
 *.docx
