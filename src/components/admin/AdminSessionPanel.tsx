@@ -36,8 +36,16 @@ export default function AdminSessionPanel({ sessionId, kunds }: { sessionId: str
   async function setBlocked(positionIds: string[], block: boolean, reasonPrompt = true) {
     let reason: string | undefined;
     if (block && reasonPrompt) {
-      reason = window.prompt('Reason for blocking (visible only to admins):', 'VIP reserved') ?? undefined;
-      if (reason === undefined) return; // cancelled
+      // Required: devotee/family name so we can print a per-day attendance list.
+      // Admins can append a note after a dash, e.g. "Ramesh Patel — VIP".
+      const input = window.prompt('Devotee / family name (required) — e.g. "Ramesh Patel":', '');
+      if (input === null) return; // cancelled
+      const trimmed = input.trim();
+      if (!trimmed) {
+        setErr('A devotee name is required to block a position.');
+        return;
+      }
+      reason = trimmed;
     }
     setBusy(true); setErr(null);
     const r = await fetch('/api/admin/positions/block', {

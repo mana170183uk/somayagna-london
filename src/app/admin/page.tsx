@@ -132,6 +132,7 @@ export default async function AdminHome() {
           <div className="flex gap-2 flex-wrap">
             <a href="/api/admin/export" className="btn-secondary !bg-ivory-50/15 !text-ivory-50 !border-ivory-50/30 hover:!bg-ivory-50/25">↓ Bookings CSV</a>
             <a href="/api/admin/donations" className="btn-secondary !bg-ivory-50/15 !text-ivory-50 !border-ivory-50/30 hover:!bg-ivory-50/25">↓ Donations CSV</a>
+            <Link href="/admin/blocks" className="btn-secondary !bg-ivory-50/15 !text-ivory-50 !border-ivory-50/30 hover:!bg-ivory-50/25">🔒 Blocked positions</Link>
             <Link href="/admin/enquiries" className="btn-secondary !bg-ivory-50/15 !text-ivory-50 !border-ivory-50/30 hover:!bg-ivory-50/25">📥 Enquiries</Link>
             <Link href="/admin/audit" className="btn-secondary !bg-ivory-50/15 !text-ivory-50 !border-ivory-50/30 hover:!bg-ivory-50/25">🕓 Audit log</Link>
             <Link href="/admin/account" className="btn-secondary !bg-ivory-50/15 !text-ivory-50 !border-ivory-50/30 hover:!bg-ivory-50/25">🔑 Change password</Link>
