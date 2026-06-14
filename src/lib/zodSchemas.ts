@@ -58,7 +58,8 @@ export const adminCreateBookingSchema = z.object({
   relation: z.enum(['COUPLE', 'SIBLING', 'INDIVIDUAL']),
   email: z.string().email(),
   phone: z.string().min(5),
-  secondParticipantName: z.string().nullable().optional()
+  secondParticipantName: z.string().nullable().optional(),
+  sendEmail: z.boolean().optional()    // off by default; admin opts in per booking
 });
 
 /* ─── Donations ─── */

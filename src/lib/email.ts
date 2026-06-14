@@ -5,6 +5,7 @@
  *   Date, Time, Yagna Type, Kund Number, Position Allocation.
  */
 import { EVENT, formatDateLong, formatGBP, formatTime } from './constants';
+import { prisma } from './prisma';
 
 interface ConfirmEmailInput {
   to: string;
@@ -20,7 +21,11 @@ interface ConfirmEmailInput {
   donationPence?: number;
 }
 
-export async function sendConfirmationEmail(i: ConfirmEmailInput): Promise<void> {
+export type EmailSendResult =
+  | { ok: true; providerId: string; mode: 'resend' | 'dev-console' }
+  | { ok: false; reason: string; status?: number };
+
+export async function sendConfirmationEmail(i: ConfirmEmailInput): Promise<EmailSendResult> {
   const subject = `Your ${EVENT.name} reservation — ${i.reference}`;
   const html = renderHtml(i);
   const text = renderText(i);
@@ -32,29 +37,128 @@ export async function sendConfirmationEmail(i: ConfirmEmailInput): Promise<void>
     console.log('Subject:', subject);
     console.log(text);
     console.log('──────────────────────────────────────────────────\n');
-    return;
+    return { ok: true, providerId: 'dev-console', mode: 'dev-console' };
   }
 
   const from = process.env.EMAIL_FROM ?? `${EVENT.name} <no-reply@${(process.env.NEXT_PUBLIC_SITE_URL ?? 'somayagnalondon.org').replace(/^https?:\/\//, '')}>`;
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      from,
-      to: [i.to],
-      subject,
-      html,
-      text,
-      reply_to: EVENT.contactEmail
-    })
-  });
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    console.error(`[email] Resend failed ${res.status} for booking ${i.reference} -> ${i.to}; from="${from}"; body=${body}`);
-    return;
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from,
+        to: [i.to],
+        subject,
+        html,
+        text,
+        reply_to: EVENT.contactEmail
+      })
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      const reason = `Resend ${res.status}: ${body.slice(0, 300)}`;
+      console.error(`[email] Resend failed ${res.status} for booking ${i.reference} -> ${i.to}; from="${from}"; body=${body}`);
+      return { ok: false, reason, status: res.status };
+    }
+    const json = await res.json().catch(() => null) as { id?: string } | null;
+    const providerId = json?.id ?? 'unknown';
+    console.log(`[email] sent confirmation for ${i.reference} to ${i.to} (resend id=${providerId})`);
+    return { ok: true, providerId, mode: 'resend' };
+  } catch (e: unknown) {
+    const reason = e instanceof Error ? e.message : String(e);
+    console.error(`[email] Network error sending ${i.reference} -> ${i.to}: ${reason}`);
+    return { ok: false, reason };
   }
-  const json = await res.json().catch(() => null) as { id?: string } | null;
-  console.log(`[email] sent confirmation for ${i.reference} to ${i.to} (resend id=${json?.id ?? 'unknown'})`);
+}
+
+/**
+ * Loads the booking, sends a confirmation email if one is on file, and writes
+ * an AuditLog row capturing the outcome. Used by webhooks, admin manual
+ * booking, and the "Resend email" admin action so behaviour is consistent.
+ *
+ * Returns the outcome so callers can render a UI message.
+ */
+export type EmailAuditOutcome =
+  | { status: 'SENT'; providerId: string; to: string }
+  | { status: 'SKIPPED'; reason: string }
+  | { status: 'FAILED'; reason: string };
+
+export async function sendAndAuditBookingConfirmation(args: {
+  bookingId: string;
+  actor: string;             // admin email, or 'stripe-webhook' / 'paypal-webhook'
+  trigger: 'INITIAL' | 'RESEND' | 'ADMIN_MANUAL' | 'BACKFILL';
+}): Promise<EmailAuditOutcome> {
+  const booking = await prisma.booking.findUnique({
+    where: { id: args.bookingId },
+    include: { session: { include: { yagnaInstance: { include: { eventDay: true } } } } }
+  });
+  if (!booking) {
+    const reason = 'BOOKING_NOT_FOUND';
+    await prisma.auditLog.create({
+      data: { actor: args.actor, action: 'EMAIL_FAILED', target: args.bookingId, meta: { trigger: args.trigger, reason } }
+    });
+    return { status: 'FAILED', reason };
+  }
+  if (!booking.email) {
+    const reason = booking.whatsappNumber ? 'NO_EMAIL_ON_FILE (WhatsApp on file)' : 'NO_EMAIL_ON_FILE';
+    await prisma.auditLog.create({
+      data: {
+        actor: args.actor,
+        action: 'EMAIL_SKIPPED',
+        target: booking.id,
+        meta: { trigger: args.trigger, reference: booking.reference, reason }
+      }
+    });
+    return { status: 'SKIPPED', reason };
+  }
+
+  const result = await sendConfirmationEmail({
+    to: booking.email,
+    primaryName: booking.primaryName,
+    reference: booking.reference,
+    date: booking.session.yagnaInstance.eventDay.date,
+    startTime: booking.session.startTime,
+    yagnaType: booking.session.yagnaInstance.title,
+    kundNumber: booking.kundNumber,
+    positions: booking.positions,
+    bookingType: booking.bookingType,
+    amountPence: booking.amountPence,
+    donationPence: booking.donationPence
+  });
+
+  if (result.ok) {
+    await prisma.auditLog.create({
+      data: {
+        actor: args.actor,
+        action: 'EMAIL_SENT',
+        target: booking.id,
+        meta: {
+          trigger: args.trigger,
+          reference: booking.reference,
+          to: booking.email,
+          providerId: result.providerId,
+          mode: result.mode
+        }
+      }
+    });
+    return { status: 'SENT', providerId: result.providerId, to: booking.email };
+  }
+
+  await prisma.auditLog.create({
+    data: {
+      actor: args.actor,
+      action: 'EMAIL_FAILED',
+      target: booking.id,
+      meta: {
+        trigger: args.trigger,
+        reference: booking.reference,
+        to: booking.email,
+        reason: result.reason,
+        status: result.status ?? null
+      }
+    }
+  });
+  return { status: 'FAILED', reason: result.reason };
 }
 
 function renderHtml(i: ConfirmEmailInput) {

@@ -3,7 +3,7 @@ import { getStripe } from '@/lib/stripe';
 import { confirmBookingFromHold, cancelHold } from '@/lib/inventory';
 import { completeDonation, failDonation } from '@/lib/donations';
 import { prisma } from '@/lib/prisma';
-import { sendConfirmationEmail } from '@/lib/email';
+import { sendAndAuditBookingConfirmation } from '@/lib/email';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -63,18 +63,11 @@ export async function POST(req: NextRequest) {
         donationPence,
         payment: { provider: 'STRIPE', providerRef: s.id, status: 'SUCCEEDED', raw: s }
       });
-      const full = await prisma.booking.findUnique({ where: { id: booking.id }, include: { session: { include: { yagnaInstance: { include: { eventDay: true } } } } } });
-      if (full && full.email) {
-        await sendConfirmationEmail({
-          to: full.email, primaryName: full.primaryName, reference: full.reference,
-          date: full.session.yagnaInstance.eventDay.date, startTime: full.session.startTime,
-          yagnaType: full.session.yagnaInstance.title, kundNumber: full.kundNumber,
-          positions: full.positions, bookingType: full.bookingType, amountPence: full.amountPence,
-          donationPence: full.donationPence
-        });
-      } else if (full) {
-        console.log(`[email] skipped for ${full.reference} — no email address (WhatsApp: ${full.whatsappNumber ?? 'also missing'})`);
-      }
+      await sendAndAuditBookingConfirmation({
+        bookingId: booking.id,
+        actor: 'stripe-webhook',
+        trigger: 'INITIAL'
+      });
     } catch (e) { console.error('Stripe confirm failed', e); }
   }
 

@@ -34,6 +34,25 @@ export default function AdminSessionPanel({ sessionId, kunds }: { sessionId: str
     router.refresh();
   }
 
+  async function resendEmail(booking: BookingLite) {
+    if (!booking.email) {
+      setErr('No email address on file for this booking.');
+      return;
+    }
+    if (!confirm(`Resend confirmation email to ${booking.email}?`)) return;
+    setBusy(true); setErr(null);
+    const r = await fetch(`/api/admin/bookings/${booking.id}/resend-email`, { method: 'POST' });
+    const data = await r.json().catch(() => ({}));
+    setBusy(false);
+    if (r.ok && data.status === 'SENT') {
+      setErr(null);
+      alert(`✓ Email sent to ${data.to}`);
+      router.refresh();
+    } else {
+      setErr(data.message || data.error || 'Could not send email.');
+    }
+  }
+
   async function setBlocked(positionIds: string[], block: boolean, reasonPrompt = true) {
     let reason: string | undefined;
     if (block && reasonPrompt) {
@@ -111,6 +130,14 @@ export default function AdminSessionPanel({ sessionId, kunds }: { sessionId: str
                               setMoving({ booking: p.booking!, currentKund: k.number, currentPositions: positionsForBooking });
                             }}
                           >Move…</button>
+                          {p.booking.email && (
+                            <button
+                              disabled={busy}
+                              className="btn-ghost !py-1 !px-2 !text-xs"
+                              title={`Resend confirmation email to ${p.booking.email}`}
+                              onClick={() => resendEmail(p.booking!)}
+                            >✉ Resend</button>
+                          )}
                           <button disabled={busy} className="btn-ghost !py-1 !px-2 !text-xs text-maroon-700" onClick={() => cancel(p.booking!.id)}>Cancel</button>
                         </div>
                       </div>
@@ -197,6 +224,7 @@ function ManualAddModal({ sessionId, kundNumber, positions, onClose, onSaved }: 
   sessionId: string; kundNumber: number; positions: ('A'|'B'|'C')[]; onClose: () => void; onSaved: () => void;
 }) {
   const [form, setForm] = useState({ primaryName: '', relation: 'INDIVIDUAL', email: '', phone: '', secondParticipantName: '' });
+  const [sendEmail, setSendEmail] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const bookingType = positions.length === 3 ? 'FULL_KUND' : 'SINGLE_POSITION';
@@ -206,11 +234,16 @@ function ManualAddModal({ sessionId, kundNumber, positions, onClose, onSaved }: 
     setBusy(true); setErr(null);
     const r = await fetch('/api/admin/bookings', {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ sessionId, bookingType, kundNumber, positions, ...form, secondParticipantName: form.secondParticipantName || null })
+      body: JSON.stringify({ sessionId, bookingType, kundNumber, positions, ...form, secondParticipantName: form.secondParticipantName || null, sendEmail })
     });
     const data = await r.json();
     setBusy(false);
     if (!r.ok) { setErr(data.message || 'Could not save'); return; }
+    if (sendEmail && data.email) {
+      if (data.email.outcome === 'SENT') alert(`✓ Booking saved and confirmation email sent to ${form.email}`);
+      else if (data.email.outcome === 'FAILED') alert(`Booking saved, but email send FAILED:\n${data.email.message ?? 'unknown error'}\n\nYou can use the ✉ Resend button on the booking later.`);
+      else if (data.email.outcome === 'SKIPPED') alert(`Booking saved. Email skipped: ${data.email.message ?? ''}`);
+    }
     onSaved();
   }
 
@@ -223,6 +256,10 @@ function ManualAddModal({ sessionId, kundNumber, positions, onClose, onSaved }: 
         <FormField label="Email" required><input type="email" className="ainput" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></FormField>
         <FormField label="Phone" required><input className="ainput" required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></FormField>
         <FormField label="Second participant (optional)" full><input className="ainput" value={form.secondParticipantName} onChange={(e) => setForm({ ...form, secondParticipantName: e.target.value })} /></FormField>
+        <label className="sm:col-span-2 flex items-center gap-2 text-sm text-maroon-800 select-none mt-1">
+          <input type="checkbox" checked={sendEmail} onChange={(e) => setSendEmail(e.target.checked)} className="h-4 w-4" />
+          <span>Send confirmation email to this booker (uses the address above)</span>
+        </label>
         {err && <div className="sm:col-span-2 text-sm text-maroon-700">{err}</div>}
         <div className="sm:col-span-2 flex justify-end gap-2">
           <button type="button" className="btn-ghost" onClick={onClose}>Cancel</button>

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { confirmBookingFromHold, cancelHold } from '@/lib/inventory';
 import { completeDonation, failDonation } from '@/lib/donations';
 import { prisma } from '@/lib/prisma';
-import { sendConfirmationEmail } from '@/lib/email';
+import { sendAndAuditBookingConfirmation } from '@/lib/email';
 
 export async function POST(req: NextRequest) {
   const event = await req.json();
@@ -52,16 +52,11 @@ export async function POST(req: NextRequest) {
         donationPence,
         payment: { provider: 'PAYPAL', providerRef: orderId, status: 'SUCCEEDED', raw: event }
       });
-      const full = await prisma.booking.findUnique({ where: { id: booking.id }, include: { session: { include: { yagnaInstance: { include: { eventDay: true } } } } } });
-      if (full && full.email) {
-        await sendConfirmationEmail({
-          to: full.email, primaryName: full.primaryName, reference: full.reference,
-          date: full.session.yagnaInstance.eventDay.date, startTime: full.session.startTime,
-          yagnaType: full.session.yagnaInstance.title, kundNumber: full.kundNumber,
-          positions: full.positions, bookingType: full.bookingType, amountPence: full.amountPence,
-          donationPence: full.donationPence
-        });
-      }
+      await sendAndAuditBookingConfirmation({
+        bookingId: booking.id,
+        actor: 'paypal-webhook',
+        trigger: 'INITIAL'
+      });
     } catch (e) { console.error('PayPal confirm failed', e); }
   }
 
