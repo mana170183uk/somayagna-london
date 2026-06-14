@@ -21,6 +21,7 @@ export default function AdminSessionPanel({ sessionId, kunds }: { sessionId: str
   const router = useRouter();
   const [adding, setAdding] = useState<{ kund: number; positions: ('A'|'B'|'C')[] } | null>(null);
   const [editing, setEditing] = useState<BookingLite | null>(null);
+  const [moving, setMoving] = useState<{ booking: BookingLite; currentKund: number; currentPositions: ('A'|'B'|'C')[] } | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -99,8 +100,17 @@ export default function AdminSessionPanel({ sessionId, kunds }: { sessionId: str
                         <div className="text-maroon-900">{p.booking.primaryName}</div>
                         <div className="text-xs text-maroon-700/90">{p.booking.email ?? '(no email)'}</div>
                         <div className="text-xs text-maroon-700/90">{p.booking.reference} · {gbp(p.booking.amountPence)} · {p.booking.paymentStatus ?? '—'}</div>
-                        <div className="mt-2 flex gap-2">
+                        <div className="mt-2 flex gap-2 flex-wrap">
                           <button className="btn-ghost !py-1 !px-2 !text-xs" onClick={() => setEditing(p.booking!)}>Edit</button>
+                          <button
+                            className="btn-ghost !py-1 !px-2 !text-xs"
+                            onClick={() => {
+                              const positionsForBooking = k.positions
+                                .filter((x) => x.booking?.id === p.booking!.id)
+                                .map((x) => x.label) as ('A'|'B'|'C')[];
+                              setMoving({ booking: p.booking!, currentKund: k.number, currentPositions: positionsForBooking });
+                            }}
+                          >Move…</button>
                           <button disabled={busy} className="btn-ghost !py-1 !px-2 !text-xs text-maroon-700" onClick={() => cancel(p.booking!.id)}>Cancel</button>
                         </div>
                       </div>
@@ -167,6 +177,17 @@ export default function AdminSessionPanel({ sessionId, kunds }: { sessionId: str
 
       {editing && (
         <EditModal booking={editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); router.refresh(); }} />
+      )}
+
+      {moving && (
+        <MoveModal
+          booking={moving.booking}
+          currentKund={moving.currentKund}
+          currentPositions={moving.currentPositions}
+          kunds={kunds}
+          onClose={() => setMoving(null)}
+          onSaved={() => { setMoving(null); router.refresh(); }}
+        />
       )}
     </div>
   );
@@ -236,6 +257,128 @@ function EditModal({ booking, onClose, onSaved }: { booking: BookingLite; onClos
         <div className="flex justify-end gap-2">
           <button type="button" className="btn-ghost" onClick={onClose}>Cancel</button>
           <button disabled={busy} className="btn-primary">{busy ? 'Saving…' : 'Save changes'}</button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+function MoveModal({
+  booking, currentKund, currentPositions, kunds, onClose, onSaved
+}: {
+  booking: BookingLite;
+  currentKund: number;
+  currentPositions: ('A'|'B'|'C')[];
+  kunds: KundLite[];
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const isFullKund = booking.bookingType === 'FULL_KUND';
+  const positionsNeeded = currentPositions.length;
+
+  // For SINGLE_POSITION: list every free position in the session as an option.
+  // For FULL_KUND: list every kund where ALL 3 positions are either free
+  // or owned by THIS booking (i.e. moving to itself shouldn't count as taken).
+  const singleOptions: { kund: number; label: 'A'|'B'|'C' }[] = [];
+  const fullKundOptions: number[] = [];
+  for (const k of kunds) {
+    if (isFullKund) {
+      const ok = k.positions.every(
+        (p) => (!p.booking && !p.blocked) || p.booking?.id === booking.id
+      );
+      if (ok) fullKundOptions.push(k.number);
+    } else {
+      for (const p of k.positions) {
+        const isMine = p.booking?.id === booking.id;
+        const free = !p.booking && !p.blocked;
+        if (free || isMine) singleOptions.push({ kund: k.number, label: p.label });
+      }
+    }
+  }
+
+  const initialKey = isFullKund
+    ? String(currentKund)
+    : `${currentKund}:${currentPositions[0]}`;
+  const [pick, setPick] = useState(initialKey);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    let targetKundNumber: number;
+    let targetPositions: ('A'|'B'|'C')[];
+    if (isFullKund) {
+      targetKundNumber = Number(pick);
+      targetPositions = ['A', 'B', 'C'];
+    } else {
+      const [kStr, label] = pick.split(':');
+      targetKundNumber = Number(kStr);
+      targetPositions = [label as 'A'|'B'|'C'];
+    }
+    setBusy(true); setErr(null);
+    const r = await fetch(`/api/admin/bookings/${booking.id}/move`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ targetKundNumber, targetPositions })
+    });
+    const data = await r.json().catch(() => ({}));
+    setBusy(false);
+    if (!r.ok) {
+      setErr(data.message || data.error || 'Could not move booking.');
+      return;
+    }
+    onSaved();
+  }
+
+  return (
+    <Modal title={`Move booking ${booking.reference}`} onClose={onClose}>
+      <form onSubmit={save} className="space-y-3">
+        <div className="rounded-lg bg-ivory-100 border border-maroon-200 px-3 py-2 text-sm text-maroon-900">
+          <div><span className="text-maroon-700/85">Devotee:</span> <b>{booking.primaryName}</b></div>
+          <div><span className="text-maroon-700/85">Currently at:</span> Kund {currentKund} / {currentPositions.join(', ')} ({isFullKund ? 'Full Kund' : 'Single'}) </div>
+          <div className="text-xs text-maroon-700/85 mt-1">Moves stay in the same session ({positionsNeeded} position{positionsNeeded === 1 ? '' : 's'}). Only available targets are shown.</div>
+        </div>
+
+        {isFullKund ? (
+          fullKundOptions.length === 0 ? (
+            <p className="text-sm text-maroon-700">No other kund has all three positions free in this session.</p>
+          ) : (
+            <FormField label="Move to which Kund?">
+              <select className="ainput" value={pick} onChange={(e) => setPick(e.target.value)}>
+                {fullKundOptions.map((n) => (
+                  <option key={n} value={String(n)}>
+                    Kund {n}{n === currentKund ? ' (current — no change)' : ''}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+          )
+        ) : (
+          singleOptions.length === 0 ? (
+            <p className="text-sm text-maroon-700">No free positions available in this session.</p>
+          ) : (
+            <FormField label="Move to which Kund / Position?">
+              <select className="ainput" value={pick} onChange={(e) => setPick(e.target.value)}>
+                {singleOptions.map((o) => {
+                  const isCurrent = o.kund === currentKund && currentPositions.includes(o.label);
+                  return (
+                    <option key={`${o.kund}:${o.label}`} value={`${o.kund}:${o.label}`}>
+                      Kund {o.kund} / Position {o.label}{isCurrent ? ' (current)' : ''}
+                    </option>
+                  );
+                })}
+              </select>
+            </FormField>
+          )
+        )}
+
+        {err && <div className="text-sm text-maroon-700">{err}</div>}
+        <div className="flex justify-end gap-2">
+          <button type="button" className="btn-ghost" onClick={onClose}>Cancel</button>
+          <button
+            disabled={busy || (isFullKund ? fullKundOptions.length === 0 : singleOptions.length === 0)}
+            className="btn-primary"
+          >{busy ? 'Moving…' : 'Move booking'}</button>
         </div>
       </form>
     </Modal>
