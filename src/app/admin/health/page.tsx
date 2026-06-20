@@ -171,7 +171,7 @@ async function runChecks(): Promise<Check[]> {
     prisma.booking.count({ where: { status: 'PENDING_PAYMENT' } }),
     prisma.booking.count({ where: { status: 'CANCELLED' } }),
     prisma.bookingHold.count({ where: { expiresAt: { gt: now } } }),
-    prisma.donation.count({ where: { status: 'SUCCEEDED' } }),
+    prisma.donation.count({ where: { status: 'COMPLETED' } }),
     prisma.enquiry.count()
   ]);
   results.push({

@@ -148,7 +148,7 @@ try {
     db.eventDay.count(), db.session.count(), db.kund.count(), db.kundPosition.count(),
     db.booking.count(), db.booking.count({ where: { status: 'CONFIRMED' } }), db.booking.count({ where: { status: 'PENDING_PAYMENT' } }),
     db.bookingHold.count({ where: { status: 'ACTIVE', expiresAt: { gt: now } } }),
-    db.donation.count({ where: { status: 'SUCCEEDED' } }), db.enquiry.count()
+    db.donation.count({ where: { status: 'COMPLETED' } }), db.enquiry.count()
   ]);
   push('[OK]', 'Snapshot counts:', [
     `EventDays: ${eventDays}`, `Sessions: ${sessions}`, `Kunds: ${kunds}`, `KundPositions: ${positions}`,
