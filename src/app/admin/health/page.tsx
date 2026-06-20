@@ -52,28 +52,40 @@ async function runChecks(): Promise<Check[]> {
     ? { tag: 'OK', title: 'Schema tables', detail: `All ${want.length} expected tables present (${have.size} total).` }
     : { tag: 'FAIL', title: 'Schema tables', detail: `Missing: ${missing.join(', ')}` });
 
-  // 3. Inventory shape
+  // 3. Inventory shape — kunds live on Session, not directly on YagnaInstance.
+  // Every Session inside a YagnaInstance should have exactly that yagna's kundCount,
+  // and every Kund should have exactly 3 positions.
   const yi = await prisma.yagnaInstance.findMany({
     select: {
-      yagnaType: true, kundCount: true,
+      yagnaType: true,
+      kundCount: true,
       eventDay: { select: { date: true } },
-      kunds: { select: { id: true, number: true, positions: { select: { id: true } } } }
+      sessions: {
+        select: {
+          startTime: true,
+          kunds: { select: { number: true, positions: { select: { id: true } } } }
+        }
+      }
     }
   });
   const shapeIssues: string[] = [];
+  let sessionCount = 0;
   for (const y of yi) {
     const d = y.eventDay.date.toISOString().slice(0, 10);
-    if (y.kunds.length !== y.kundCount) {
-      shapeIssues.push(`${d} ${y.yagnaType}: ${y.kunds.length} kunds (expected ${y.kundCount})`);
-    }
-    for (const k of y.kunds) {
-      if (k.positions.length !== 3) {
-        shapeIssues.push(`${d} ${y.yagnaType} kund ${k.number}: ${k.positions.length} positions (expected 3)`);
+    for (const s of y.sessions) {
+      sessionCount++;
+      if (s.kunds.length !== y.kundCount) {
+        shapeIssues.push(`${d} ${y.yagnaType} ${s.startTime}: ${s.kunds.length} kunds (expected ${y.kundCount})`);
+      }
+      for (const k of s.kunds) {
+        if (k.positions.length !== 3) {
+          shapeIssues.push(`${d} ${y.yagnaType} ${s.startTime} kund ${k.number}: ${k.positions.length} positions (expected 3)`);
+        }
       }
     }
   }
   results.push(shapeIssues.length === 0
-    ? { tag: 'OK', title: 'Inventory shape', detail: `${yi.length} yagna instances; every kund has exactly 3 positions.` }
+    ? { tag: 'OK', title: 'Inventory shape', detail: `${yi.length} yagna instances · ${sessionCount} sessions; every kund has exactly 3 positions.` }
     : { tag: 'FAIL', title: 'Inventory shape', items: shapeIssues });
 
   // 4. Position status sanity — booked AND blocked
